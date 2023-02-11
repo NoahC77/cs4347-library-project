@@ -1,5 +1,10 @@
 # cs4347-library-project
-Phase 1 Link: https://docs.google.com/document/d/1kZFQBo9IuNJ4pebqy7pQcpLcvj_lnq6aQ8pUz4zKqvE/edit?usp=sharing
-Phase 2 Link: https://docs.google.com/document/d/132fYXMI_A0EkV_vP-iBv6PJ0PxR7wEc1A5grGGTU4dM/edit?usp=sharing
+All code goes in src directory. All docs/design diagrams go in docs directory.
 
-Schema Link: https://docs.google.com/document/d/13xHk-C4MR4alErjH0l8enSRp1-P815KnBRz2UsfF1JM/edit?usp=sharing
+## Contributing
+1) Clone the repo
+2) Make a branch and commit to this branch
+3) Submit pull request for your branch to main
+
+
+
