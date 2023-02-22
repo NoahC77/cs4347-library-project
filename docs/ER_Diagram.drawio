@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="7cVWoikjw2al0mrFs_u3" name="Page-1">
-        <mxGraphModel dx="1690" dy="1820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2172" dy="1655" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -232,7 +232,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="71" value="Title" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="290" y="640" width="60" height="30" as="geometry"/>
+                    <mxGeometry x="300" y="640" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="78" style="edgeStyle=none;html=1;entryX=1;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" parent="1" target="63" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -283,7 +283,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="92" value="Model" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="165" y="595" width="55" height="30" as="geometry"/>
+                    <mxGeometry x="137.5" y="600" width="55" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="109" value="" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="430" y="360" width="90" height="60" as="geometry"/>
@@ -354,7 +354,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="144" value="DueDate" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-45" y="105" width="60" height="30" as="geometry"/>
+                    <mxGeometry x="-60" y="105" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="148" value="PublishDate" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="610" y="525" width="80" height="30" as="geometry"/>
@@ -433,7 +433,7 @@
                     <mxGeometry x="310" y="420" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="190" value="CDID (Barcode)" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-145" y="320" width="60" height="30" as="geometry"/>
+                    <mxGeometry x="-150" y="305" width="75" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="207" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" parent="1" source="204" target="53" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -526,6 +526,11 @@
                 <mxCell id="267" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="265" target="45">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
+                <mxCell id="295" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;endArrow=none;endFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="265" target="296">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="330" y="170" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
                 <mxCell id="265" value="waitlist" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="230" y="80" width="80" height="80" as="geometry"/>
                 </mxCell>
@@ -563,7 +568,7 @@
                 <mxCell id="280" style="edgeStyle=none;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="279" target="265">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="279" value="joinDate" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="279" value="JoinDate" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="170" y="150" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="284" value="ItemID" style="ellipse;whiteSpace=wrap;html=1;fontStyle=4" vertex="1" parent="1">
@@ -583,6 +588,9 @@
                 </mxCell>
                 <mxCell id="291" value="ItemID" style="ellipse;whiteSpace=wrap;html=1;fontStyle=4" vertex="1" parent="1">
                     <mxGeometry x="62.5" y="555" width="65" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="296" value="ItemName" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="315" y="150" width="70" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
