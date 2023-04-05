@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
+import {CfnOutput, Duration} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {Code, Function, Runtime} from "aws-cdk-lib/aws-lambda";
+import {Code, Function, FunctionUrlAuthType, Runtime} from "aws-cdk-lib/aws-lambda";
 import {SecurityGroup, Vpc} from "aws-cdk-lib/aws-ec2";
 import * as Path from "path";
 import {DatabaseInstance, DatabaseInstanceEngine} from "aws-cdk-lib/aws-rds";
 import {Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
-import {Duration} from "aws-cdk-lib";
 
 interface LambdaStackProps extends cdk.StackProps {
     vpcId: string,
@@ -75,5 +75,27 @@ export class LambdaStack extends cdk.Stack {
                 DB_USERNAME:props.lambdaDbUser
             }
         });
+
+        const endpointTest = new Function(this, "EndpointFunction", {
+            runtime: Runtime.JAVA_11,
+            code: Code.fromAsset(Path.join("..", "lambda/build/distributions", "lambda-1.0.0.zip")),
+            handler: "TestEndpoint::handleRequest",
+            vpc,
+            allowPublicSubnet:true,
+            role: testLambdaRole,
+            timeout: Duration.minutes(1),
+
+            memorySize:1024,
+            environment: {}
+
+        })
+
+        const endpointUrl = endpointTest.addFunctionUrl({
+            authType: FunctionUrlAuthType.NONE
+        });
+
+        new CfnOutput(this, "EndpointURL", {
+            value: endpointUrl.url
+        })
     }
 }

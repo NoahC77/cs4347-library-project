@@ -17,6 +17,8 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-rds:1.12.439")
     implementation("software.amazon.awssdk:rds:2.20.36")
     implementation("software.aws.rds:aws-mysql-jdbc:1.1.5")
+    implementation("com.amazonaws.serverless:aws-serverless-java-container-spark:1.9.2")
+    implementation("com.sparkjava:spark-core:2.9.4")
     implementation("mysql:mysql-connector-java:8.0.32")
     runtimeOnly("com.amazonaws:aws-lambda-java-log4j2:1.5.1")
 }
