@@ -66,15 +66,21 @@ fun createSourceSetWithName(name: String) {
         runtimeClasspath = commonRuntime + sourceSets["main"].output
     }
     tasks.register<Zip>("build${name.capitalized()}") {
-
+        dependsOn(tasks.getByName("mainJar"))
         from(sourceSets[name].output)
         archiveFileName.set("$name.zip")
         into("lib") {
+            from(tasks["mainJar"].outputs.files)
             from(sourceSets[name].runtimeClasspath)
             from(sourceSets[name].compileClasspath)
         }
     }
 
+}
+
+tasks.register<Jar>("mainJar") {
+    from(sourceSets["main"].output)
+    archiveFileName.set("main.jar")
 }
 
 tasks.register("buildZips") {
