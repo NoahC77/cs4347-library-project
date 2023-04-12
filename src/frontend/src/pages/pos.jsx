@@ -17,15 +17,13 @@ function populateItems()
   return itemList
 }
 
-function Items() {
+function POs() {
   const { page, setPage } = useContext(Context)
   const [ items, setItems ] = useState(populateItems)
 
   return (
     <>
-      <div className="h-[9vh] text-center font-bold text-[4vh]">
-        Items
-      </div>
+      <div className="h-[5vh] text-center" onClick={() => setPage(<AddItem/>)}>Title</div>
 
       <Search/>
       
@@ -44,4 +42,4 @@ function Items() {
   );
 }
 
-export default Items;
+export default POs;
