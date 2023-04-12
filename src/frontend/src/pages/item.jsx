@@ -1,5 +1,6 @@
 import Option from '../components/option'
 import Search from '../components/search'
+import AddItem from './add-item'
 import { useState, createContext, useContext } from 'react'
 import { Context } from '../App'
 
