@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import {CfnOutput, Duration} from 'aws-cdk-lib';
+import {CfnOutput, Duration, Token} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Code, Function, FunctionUrlAuthType, Runtime} from "aws-cdk-lib/aws-lambda";
 import {IVpc, SecurityGroup, Vpc} from "aws-cdk-lib/aws-ec2";
@@ -8,6 +8,8 @@ import {DatabaseInstance, DatabaseInstanceEngine, IDatabaseInstance} from "aws-c
 import {Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import * as path from "path";
+import {util} from "prettier";
+import skipSpaces = util.skipSpaces;
 
 interface LambdaStackProps extends cdk.StackProps {
     vpcId: string,
@@ -70,30 +72,43 @@ export class LambdaStack extends cdk.Stack {
             handler: "Handler::handleRequest"
         }
 
-        fs.readdir(Path.join("..", "lambda/build/distributions"), (err, files) => {
-            if (err) {
-                console.log(err);
-            } else {
-                files.forEach((file) => {
-                    if (Path.extname(file) === ".zip") {
-                        const name = Path.parse(file).name;
-                        const fn = createLambda(this, name, {
-                            artifactName: file,
-                            ...lambdaPropsBase
-                        });
-                        const endpointUrl = fn.addFunctionUrl({
-                            authType: FunctionUrlAuthType.NONE
-                        });
+        const fnArns: any[] = []
+        const files = fs.promises.readdir(Path.join("..", "lambda/build/distributions"))
+            .then((values) => {
+                return values
+                    .map(value => Path.join("..", "lambda/build/distributions", value))
+                    .map((value) => Path.parse(value))
+                    .filter(value => value.ext === ".zip")
+            }).then((paths) => {
+                console.log(paths)
+                let functions: [string, Function][] = []
+                paths.forEach(path => {
+                    const name = path.name
 
-                        new CfnOutput(this, `${name}-EndpointURL`, {
-                            value: endpointUrl.url
-                        })
-                    }
-                })
-            }
-        });
-
-
+                    functions.push([name, createLambda(this, name, {
+                        artifactName: path.base,
+                        ...lambdaPropsBase
+                    })]);
+                });
+                return functions
+            }).then(fns => {
+                fns.forEach(fn => {
+                    const endpointUrl = fn[1].addFunctionUrl({
+                        authType: FunctionUrlAuthType.NONE
+                    });
+                    new CfnOutput(this, `${fn[0]}-EndpointURL`, {
+                        value: endpointUrl.url
+                    });
+                });
+                return fns;
+            }).then(fns => {
+                fns.forEach(fn => {
+                    new CfnOutput(this, `${fn[0]}ARN`, {
+                        value: fn[1].functionArn,
+                        exportName: `${fn[0]}ARN`
+                    })
+                });
+            });
     }
 }
 
@@ -122,5 +137,5 @@ function createLambda(parent: Construct, id: string, lambdaProps: LambdaProps): 
             DB_PORT: lambdaProps.db.dbInstanceEndpointPort,
             DB_USERNAME: lambdaProps.lambdaDbUser
         }
-    })
+    });
 }

@@ -10,7 +10,16 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 public class TestLambdaHandler implements RequestHandler<Map<String, String>, String> {
-    private static final String JDBC_URL = "jdbc:mysql:aws://" + Environment.DB_HOST_NAME + ":" + Environment.DB_PORT+"/CS4347";
+    private static final String JDBC_URL = "jdbc:mysql:aws://" + Environment.DB_HOST_NAME + ":" + Environment.DB_PORT + "/CS4347";
+    public static final Connection conn;
+
+    static {
+        try {
+            conn = getDBConnectionUsingIAM();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static void prettyPrintEnv(LambdaLogger logger) {
         logger.log("Environment Variables:");
@@ -23,8 +32,6 @@ public class TestLambdaHandler implements RequestHandler<Map<String, String>, St
         LambdaLogger logger = context.getLogger();
         logger.log(Arrays.toString(System.getenv().entrySet().toArray()));
         try {
-            logger.log("CreateConnection");
-            Connection conn = getDBConnectionUsingIAM(logger);
             logger.log("CreateStatement");
             Statement statement = conn.createStatement();
 
@@ -48,18 +55,14 @@ public class TestLambdaHandler implements RequestHandler<Map<String, String>, St
     }
 
 
-
-    private static Connection getDBConnectionUsingIAM(LambdaLogger logger) throws SQLException {
-        logger.log("Connection Initialization");
-        return DriverManager.getConnection(JDBC_URL, setMySqlConnectionProperties(logger));
+    private static Connection getDBConnectionUsingIAM() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL, setMySqlConnectionProperties());
     }
 
-    private static Properties setMySqlConnectionProperties(LambdaLogger logger) {
-        logger.log("Properties Initialization");
+    private static Properties setMySqlConnectionProperties() {
         Properties properties = new Properties();
         properties.setProperty("useAwsIam", "true");
         properties.setProperty("user", Environment.DB_USERNAME);
-        logger.log("Properties Finalized");
         return properties;
     }
 }
