@@ -27,10 +27,10 @@ createSourceSetWithName("login")
 createSourceSetWithName("item")
 createSourceSetWithName("warehouse")
 createSourceSetWithName("vendor")
-createSourceSetWithName("salesHistory")
 createSourceSetWithName("account")
 createSourceSetWithName("sale")
 createSourceSetWithName("purchaseOrder")
+createSourceSetWithName("suppliedItem")
 
 dependencies {
     commonCompile("com.amazonaws:aws-lambda-java-core:1.2.2")
@@ -42,6 +42,10 @@ dependencies {
     commonCompile("com.sparkjava:spark-core:2.9.4")
     commonCompile("mysql:mysql-connector-java:8.0.32")
     commonRuntime("com.amazonaws:aws-lambda-java-log4j2:1.5.1")
+    commonCompile("com.google.code.gson:gson:2.10.1")
+    commonCompile("org.slf4j:jcl-over-slf4j:2.0.5")
+    commonCompile("org.slf4j:slf4j-log4j12:2.0.5")
+    commonCompile("com.amazonaws:aws-lambda-java-log4j:1.0.1")
 }
 
 sourceSets {
