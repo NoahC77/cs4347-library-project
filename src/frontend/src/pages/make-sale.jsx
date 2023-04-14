@@ -1,7 +1,25 @@
-function MakeSale() {
+import Option from '../components/option'
+import Search from '../components/search'
+import Field from '../components/field'
+import Submit from '../components/submit'
+import Title from '../components/title'
+
+import { useState, createContext, useContext } from 'react'
+import { Context } from '../App'
+
+function MakeSale(props) {
+  const { page, setPage } = useContext(Context)
+
   return (
     <>
-      <p className="text-5xl text-[#BADA55] font-bold">Hello world!</p>
+      <Title>Make Sale</Title>
+
+      <Field editable={true} text1="Name:" text2={`${props.name}`}/>
+      <Field editable={true} text1="Date:" text2={`${props.date}`}/>
+      <Field editable={true} text1="Item ID:" text2={`${props.itemid}`}/>
+      <Field editable={true} text1="Sale ID:" text2={`${props.saleid}`}/>
+
+      <Submit/>
     </>
   );
 }

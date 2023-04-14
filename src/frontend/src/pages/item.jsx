@@ -1,57 +1,29 @@
 import Option from '../components/option'
 import Search from '../components/search'
-import AddItem from './add-item'
+import Field from '../components/field'
+import Submit from '../components/submit'
+import Title from '../components/title'
+import Delete from '../components/delete'
+
 import { useState, createContext, useContext } from 'react'
 import { Context } from '../App'
 
-function Item() {
+function Item(props) {
   const { page, setPage } = useContext(Context)
 
   return (
     <>
-      <div className="h-[5vh] text-center" onClick={() => setPage(<AddItem/>)}>Title</div>
+      <Title>Item</Title>
 
-      <Search/>
+      <Field editable={true} text1="Name:" text2={`${props.name}`}/>
+      <Field editable={false} text1="ID:" text2={`${props.itemid}`}/>
+      <Field editable={false} text1="Stock:" text2={`${props.stock}`}/>
+      <Field editable={true} text1="Minimum Stock:" text2={`${props.minStock}`}/>
+      <Field editable={true} text1="Sell Price:" text2={`${props.sellPrice}`}/>
 
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
+      <Submit/>
 
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-      <Option name="Screws" stock={10}/>
-
-      <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
-        Page {1} of {10} 
-        <div className="
-          h-[5vh] w-[5vw] bg-[#2288BB] rounded-[5px]
-          text-white text-[4vh] leading-none text-center [cursor:pointer]
-        ">
-          {'>'}
-        </div>
-      </div>
+      <Delete/>
     </>
   );
 }

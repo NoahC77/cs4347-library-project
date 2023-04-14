@@ -1,8 +1,12 @@
 import { useState, useContext } from 'react'
 import { Context } from '../App'
+
 import Option from '../components/option'
 import Search from '../components/search'
-import AddItem from './add-item'
+import Title from '../components/title'
+
+import PO from './po'
+import AddPO from './add-po'
 
 function populateItems()
 {
@@ -11,7 +15,12 @@ function populateItems()
 
   for(let a = 1; a <= itemNum; a++)
   {
-    itemList.push({name:`Screw ${a}`, stock:10})
+    itemList.push({
+      orderid:a,
+      quantity:10,
+      price:100,
+      date:"yesterday"
+    })
   }
 
   return itemList
@@ -19,15 +28,26 @@ function populateItems()
 
 function POs() {
   const { page, setPage } = useContext(Context)
-  const [ items, setItems ] = useState(populateItems)
+  const [ pos, setPOs ] = useState(populateItems)
 
   return (
     <>
-      <div className="h-[5vh] text-center" onClick={() => setPage(<AddItem/>)}>Title</div>
+      <Title>Purchase Orders</Title>
 
-      <Search/>
+      <Search onAddClick={() => setPage(<AddPO/>)}/>
       
-      { items.map( elem => <Option name={elem.name} stock={elem.stock} className2="text-right"/> ) }
+      {pos.map( elem => 
+        <Option 
+          text1={elem.date}
+          className1="text-center col-span-2"
+          onClick={() => setPage(<PO
+            orderid={elem.orderid}
+            quantity={elem.quantity}
+            price={elem.price}
+            date={elem.date}
+          />)}
+        /> 
+      )}
 
       <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
         Page {1} of {10} 

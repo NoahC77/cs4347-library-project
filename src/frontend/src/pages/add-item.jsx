@@ -1,15 +1,26 @@
-import { useState, createContext, useContext } from 'react'
-import { Context } from '../App'
 import Option from '../components/option'
 import Search from '../components/search'
-import Menu from './menu'
+import Field from '../components/field'
+import Submit from '../components/submit'
+import Title from '../components/title'
 
-function AddItem() {
+import { useState, createContext, useContext } from 'react'
+import { Context } from '../App'
+
+function AddItem(props) {
   const { page, setPage } = useContext(Context)
 
   return (
     <>
-      <div className="h-[5vh] text-center" onClick={() => setPage(<Menu/>)}>Yeet</div>
+      <Title>Add Item</Title>
+
+      <Field editable={true} text1="Name:" text2={`${props.name}`}/>
+      <Field editable={true} text1="ID:" text2={`${props.itemid}`}/>
+      <Field editable={true} text1="Stock:" text2={0}/>
+      <Field editable={true} text1="Minimum Stock:" text2={`${props.minStock}`}/>
+      <Field editable={true} text1="Sell Price:" text2={`${props.sellPrice}`}/>
+
+      <Submit/>
     </>
   );
 }
