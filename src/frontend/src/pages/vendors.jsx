@@ -35,7 +35,7 @@ function Vendors() {
 
   return (
     <>
-      <Title>Items</Title>
+      <Title>Vendors</Title>
 
       <Search onAddClick={() => setPage(<AddVendor/>)}/>
       
