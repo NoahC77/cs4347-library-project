@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public class TestLambdaHandler implements RequestHandler<Map<String, String>, String> {
+public class TestLambdaHandler {
     private static final String JDBC_URL = "jdbc:mysql:aws://" + Environment.DB_HOST_NAME + ":" + Environment.DB_PORT + "/CS4347";
     public static final Connection conn;
 
@@ -27,32 +27,6 @@ public class TestLambdaHandler implements RequestHandler<Map<String, String>, St
                 .forEach(o -> logger.log((String) o));
     }
 
-    @Override
-    public String handleRequest(Map<String, String> input, Context context) {
-        LambdaLogger logger = context.getLogger();
-        logger.log(Arrays.toString(System.getenv().entrySet().toArray()));
-        try {
-            logger.log("CreateStatement");
-            Statement statement = conn.createStatement();
-
-            logger.log("ExecuteQuery");
-            ResultSet result = statement.executeQuery("SELECT fname,lname FROM employee;");
-
-            logger.log("BuildResponse");
-            StringBuilder builder = new StringBuilder();
-            while (result.next()) {
-                builder.append(result.getTimestamp(1));
-                builder.append(", ");
-                builder.append(result.getTimestamp(2));
-                builder.append("\n");
-            }
-            logger.log("ReturnResponse");
-            return builder.toString();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 
 
     private static Connection getDBConnectionUsingIAM() throws SQLException {
