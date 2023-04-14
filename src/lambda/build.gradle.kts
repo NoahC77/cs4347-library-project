@@ -1,4 +1,9 @@
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Klaxon
+import com.beust.klaxon.Parser
 import org.gradle.configurationcache.extensions.capitalized
+
+typealias BAOS = java.io.ByteArrayOutputStream
 
 plugins {
     id("java")
@@ -23,6 +28,7 @@ tasks.withType<JavaCompile> {
 val commonCompile = configurations.create("commonCompile")
 val commonRuntime = configurations.create("commonRuntime")
 
+
 createSourceSetWithName("login")
 createSourceSetWithName("item")
 createSourceSetWithName("warehouse")
@@ -33,6 +39,7 @@ createSourceSetWithName("purchaseOrder")
 createSourceSetWithName("suppliedItem")
 
 dependencies {
+    commonCompile("org.projectlombok:lombok:1.18.26")
     commonCompile("com.amazonaws:aws-lambda-java-core:1.2.2")
     commonCompile("com.amazonaws:aws-lambda-java-events:3.11.1")
     commonCompile("com.amazonaws:aws-java-sdk-rds:1.12.439")
@@ -68,8 +75,14 @@ fun createSourceSetWithName(name: String) {
         resources.srcDir("src/$name/resources/")
         compileClasspath = commonCompile + sourceSets["main"].output
         runtimeClasspath = commonRuntime + sourceSets["main"].output
+
+        val annotationProcessorConfig = configurations.getByName(annotationProcessorConfigurationName)
+        dependencies {
+            annotationProcessorConfig("org.projectlombok:lombok:1.18.26")
+        }
     }
-    tasks.register<Zip>("build${name.capitalized()}") {
+    val buildTaskName = "build${name.capitalized()}"
+    tasks.register<Zip>(buildTaskName) {
         dependsOn(tasks.getByName("mainJar"))
         from(sourceSets[name].output)
         archiveFileName.set("$name.zip")
@@ -79,6 +92,47 @@ fun createSourceSetWithName(name: String) {
             from(sourceSets[name].compileClasspath)
         }
     }
+
+    val getCategoryARNTaskName = "getCategoryARN${name}"
+    val categoryARN = "${name}ARN"
+    tasks.register<Exec>(getCategoryARNTaskName) {
+        commandLine(
+            "aws",
+            "cloudformation",
+            "describe-stacks",
+            "--stack-name",
+            "LambdaStack",
+            "--query",
+            "Stacks[0].Outputs[?OutputKey=='${name}ARN'].{category:OutputKey,arn:OutputValue}[0]"
+        )
+        standardOutput = BAOS()
+
+        doLast {
+            val arn = (standardOutput as BAOS).toByteArray().toString(Charsets.UTF_8)
+            ext[categoryARN] = arn
+        }
+    }
+    tasks.register<Exec>("update${name.capitalized()}") {
+        dependsOn(tasks.getByName(buildTaskName))
+        dependsOn(tasks.getByName(getCategoryARNTaskName))
+
+        val categoryZipFilePath = tasks.getByName(buildTaskName).outputs.files.singleFile.absolutePath
+
+        commandLine("aws")
+        argumentProviders.add(CommandLineArgumentProvider {
+            val arn = (Parser.default().parse(StringBuilder(ext[categoryARN] as String)) as JsonObject)["arn"] as String
+
+            listOf(
+                "lambda",
+                "update-function-code",
+                "--function-name",
+                arn,
+                "--zip-file",
+                "fileb://${categoryZipFilePath}"
+            )
+        })
+    }
+
 
 }
 
@@ -91,4 +145,14 @@ tasks.register("buildZips") {
     dependsOn(
         tasks.filter { it is Zip && it.name.startsWith("build") }
     )
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.beust:klaxon:5.5")
+    }
 }

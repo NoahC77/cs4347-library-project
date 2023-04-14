@@ -35,7 +35,6 @@ public class Handler implements RequestStreamHandler {
     }
 
     private static void defineEndpoints() {
-get("/hello", (req, res) -> "Hello World");
     }
 }
 
