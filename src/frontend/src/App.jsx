@@ -13,26 +13,29 @@ import PO from './pages/po'
 import POs from './pages/pos'
 import SaleHist from './pages/sale-hist'
 import SuppItems from './pages/supp-items'
-import UpdateAcc from './pages/update-acc'
 import Vendor from './pages/vendor'
 import Vendors from './pages/vendors'
 import Ware from './pages/ware'
 import Wares from './pages/wares'
+
+import Option from './components/option'
+import Field from './components/field'
+import Search from './components/search'
+import Sumbit from './components/submit'
+import Title from './components/title'
+import Delete from './components/delete'
+
 import { useState, createContext } from 'react'
 
 export const Context = createContext()
 
 function App()
 {
-  const emptyPage = <></>
-  const [page, setPage] = useState(emptyPage)
-
-  if(page === emptyPage)
-    setPage(<Menu/>)
+  const [page, setPage] = useState(<Menu/>)
 
   return (
     <>
-      <main className="min-h-screen w-[100vw] bg-[#CCCCCC] overflow-x-hidden">
+      <main className="min-h-screen w-full bg-[#CCCCCC] overflow-x-hidden">
         <div className="grid grid-cols-2">
           <span className="
             h-[8vh] w-[min(12vh,8vw)] bg-[#2288BB] rounded-[5px] justify-self-start

@@ -1,7 +1,11 @@
 import { useState, useContext } from 'react'
 import { Context } from '../App'
+
 import Option from '../components/option'
 import Search from '../components/search'
+import Title from '../components/title'
+
+import Item from './item'
 import AddItem from './add-item'
 
 function populateItems()
@@ -11,7 +15,13 @@ function populateItems()
 
   for(let a = 1; a <= itemNum; a++)
   {
-    itemList.push({name:`Screw ${a}`, stock:10})
+    itemList.push({
+      name:`Item ${a}`,
+      itemid:a,
+      stock:1000 + a,
+      minStock:10,
+      sellPrice:100
+    })
   }
 
   return itemList
@@ -23,13 +33,24 @@ function Items() {
 
   return (
     <>
-      <div className="h-[9vh] text-center font-bold text-[4vh]">
-        Items
-      </div>
+      <Title>Items</Title>
 
-      <Search/>
+      <Search onAddClick={() => setPage(<AddItem/>)}/>
       
-      { items.map( elem => <Option name={elem.name} stock={elem.stock} className2="text-right"/> ) }
+      {items.map( elem => 
+        <Option 
+          text1={elem.name}
+          text2={elem.stock}
+          className2="text-right"
+          onClick={() => setPage(<Item
+            name={elem.name}
+            itemid={elem.itemid}
+            stock={elem.stock}
+            minStock={elem.minStock}
+            sellPrice={elem.sellPrice}
+          />)}
+        /> 
+      )}
 
       <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
         Page {1} of {10} 
