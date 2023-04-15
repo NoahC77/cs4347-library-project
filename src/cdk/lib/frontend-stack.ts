@@ -7,17 +7,6 @@ import {CanonicalUserPrincipal, PolicyStatement} from "aws-cdk-lib/aws-iam";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {BucketDeployment, Source} from "aws-cdk-lib/aws-s3-deployment";
 
-const lambda_arns = [
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-account636CB76F-iP1j8kZk5AcM",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-commonFE63BF5B-eIj2pOsZAqrN",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-itemDD1DC579-6vyJV0FK8fkI",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-login68DC89FC-Pa2QdzGh816V",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-purchaseOrder390ACECC-JCshvOyVhweT",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-sale0056A4DF-yyUY7PctSkA6",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-salesHistory68094C7B-3p5O1l3r1hbn",
-    "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-vendor1515F034-NhPtk6gLHjk8"
-]
-
 export class FrontendStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: StackProps) {
         super(scope, id, props);

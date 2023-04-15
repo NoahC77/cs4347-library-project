@@ -70,7 +70,7 @@ import java.util.Date;
 import static spark.Spark.get;
 import static spark.Spark.redirect;
 
-//Might make a super class that contains this boilerplate so we don't need to repeat it.
+//Might make a super class that contains this boilerplate, so we don't need to repeat it.
 public class Handler implements RequestStreamHandler {
     // This is generic boilerplate for handlers
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
