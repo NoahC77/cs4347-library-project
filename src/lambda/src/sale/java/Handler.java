@@ -40,64 +40,36 @@ public class Handler implements RequestStreamHandler {
     }
 
     @AllArgsConstructor
-    public static class Item {
+    public static class Sales {
         //These fields are the fields that are present on the item table
         public String itemId;
-        public int currentStock;
         public String itemName;
-        public int sellPrice;
-        public int minimumStockLevel;
+        public String saleName;
+        public Date dateSold;
     }
 
     private static void defineEndpoints() {
-        listItemsEndpoint();
-        getItemEndpoint();
+        listSalesEndpoint();
     }
 
-    private static void listItemsEndpoint(){
+    private static void listSalesEndpoint(){
         Gson gson = new Gson();
-        get("/items", (req, res) -> {
+        get("/salesHistory", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM item;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM sales_record;");
 
-            ArrayList<Item> orders = new ArrayList<>();
+            ArrayList<Sales> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Item item = new Item(
+                Sales sale = new Sales(
                         resultSet.getString("item_id"),
-                        resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
-                        resultSet.getInt("sell_price"),
-                        resultSet.getInt("minimum_stock_level")
+                        resultSet.getString("sale_id"),
+                        resultSet.getDate("date_sold")
                 );
 
-                orders.add(item);
+                orders.add(sale);
             }
             return orders;
         },gson::toJson);
     }
-
-    private static void getItemEndpoint(){
-        Gson gson = new Gson();
-        get("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
-            Statement statement = TestLambdaHandler.conn.createStatement();
-
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+item_id+"';");
-            ArrayList<Item> orders = new ArrayList<>();
-            while (resultSet.next()) {
-                Item item = new Item(
-                        resultSet.getString("item_id"),
-                        resultSet.getInt("current_stock"),
-                        resultSet.getString("item_name"),
-                        resultSet.getInt("sell_price"),
-                        resultSet.getInt("minimum_stock_level")
-                );
-                orders.add(item);
-            }
-            return orders;
-        },gson::toJson);
-    }
-
-
-
 }

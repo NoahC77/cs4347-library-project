@@ -40,59 +40,64 @@ public class Handler implements RequestStreamHandler {
     }
 
     @AllArgsConstructor
-    public static class Item {
+    public static class Vendor {
         //These fields are the fields that are present on the item table
-        public String itemId;
-        public int currentStock;
-        public String itemName;
-        public int sellPrice;
-        public int minimumStockLevel;
+        public String vendorName;
+        public String state;
+        public String city;
+        public String zipCode;
+        public String street;
+        public String aptNum;
     }
 
     private static void defineEndpoints() {
-        listItemsEndpoint();
-        getItemEndpoint();
+        listVendorsEndpoint();
+        getVendorEndpoint();
     }
 
-    private static void listItemsEndpoint(){
+    private static void listVendorsEndpoint(){
         Gson gson = new Gson();
-        get("/items", (req, res) -> {
+        get("/vendors", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM item;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor;");
 
-            ArrayList<Item> orders = new ArrayList<>();
+            ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Item item = new Item(
-                        resultSet.getString("item_id"),
-                        resultSet.getInt("current_stock"),
-                        resultSet.getString("item_name"),
-                        resultSet.getInt("sell_price"),
-                        resultSet.getInt("minimum_stock_level")
+                Vendor vendor = new Vendor(
+                        resultSet.getString("vendor_name"),
+                        resultSet.getString("city"),
+                        resultSet.getString("state"),
+                        resultSet.getString("street"),
+                        resultSet.getString("zip_code"),
+                        resultSet.getString("apt_code")
                 );
 
-                orders.add(item);
+                orders.add(vendor);
             }
             return orders;
         },gson::toJson);
     }
 
-    private static void getItemEndpoint(){
+    private static void getVendorEndpoint(){
         Gson gson = new Gson();
-        get("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
+        get("/vendor/:vendor_name", (req, res) -> {
+            String vendor_name = req.params(":vendor_name");
             Statement statement = TestLambdaHandler.conn.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor WHERE vendor_name = '"+vendor_name+"';");
+            //VALUE ('"+pid+"','"+tid+"','"+rid+"',"+tspent+",'"+des+"')")
 
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+item_id+"';");
-            ArrayList<Item> orders = new ArrayList<>();
+            ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Item item = new Item(
-                        resultSet.getString("item_id"),
-                        resultSet.getInt("current_stock"),
-                        resultSet.getString("item_name"),
-                        resultSet.getInt("sell_price"),
-                        resultSet.getInt("minimum_stock_level")
+                Vendor vendor = new Vendor(
+                        resultSet.getString("vendor_name"),
+                        resultSet.getString("city"),
+                        resultSet.getString("state"),
+                        resultSet.getString("street"),
+                        resultSet.getString("zip_code"),
+                        resultSet.getString("apt_code")
                 );
-                orders.add(item);
+
+                orders.add(vendor);
             }
             return orders;
         },gson::toJson);
