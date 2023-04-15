@@ -37,6 +37,7 @@ createSourceSetWithName("account")
 createSourceSetWithName("sale")
 createSourceSetWithName("purchaseOrder")
 createSourceSetWithName("suppliedItem")
+createSourceSetWithName("optimizer")
 
 dependencies {
     commonCompile("org.projectlombok:lombok:1.18.26")
@@ -53,11 +54,13 @@ dependencies {
     commonCompile("org.slf4j:jcl-over-slf4j:2.0.5")
     commonCompile("org.slf4j:slf4j-log4j12:2.0.5")
     commonCompile("com.amazonaws:aws-lambda-java-log4j:1.0.1")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
 }
 
 sourceSets {
     main.get().compileClasspath += commonCompile
     main.get().runtimeClasspath += commonRuntime
+
 }
 
 tasks.register<Zip>("buildCommon") {

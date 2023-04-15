@@ -5,6 +5,7 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import spark.Spark;
 
@@ -42,10 +43,15 @@ public class Handler implements RequestStreamHandler {
     @AllArgsConstructor
     public static class Item {
         //These fields are the fields that are present on the item table
+        @SerializedName("item_id")
         public String itemId;
+        @SerializedName("current_stock")
         public int currentStock;
+        @SerializedName("item_name")
         public String itemName;
+        @SerializedName("sell_price")
         public int sellPrice;
+        @SerializedName("minimum_stock_level")
         public int minimumStockLevel;
     }
 
@@ -53,7 +59,7 @@ public class Handler implements RequestStreamHandler {
         listItemsEndpoint();
     }
 
-    private static void listItemsEndpoint(){
+    private static void listItemsEndpoint() {
         Gson gson = new Gson();
         get("/items", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
@@ -72,6 +78,6 @@ public class Handler implements RequestStreamHandler {
                 orders.add(item);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
 }

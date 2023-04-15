@@ -1,15 +1,16 @@
 import * as cdk from "aws-cdk-lib";
 import {Fn, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {HttpApi, HttpMethod, HttpRouteIntegration} from "@aws-cdk/aws-apigatewayv2-alpha";
+import {HttpApi, HttpMethod} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {HttpLambdaIntegration, HttpUrlIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
-import {Function, IFunction} from "aws-cdk-lib/aws-lambda";
+import {Function} from "aws-cdk-lib/aws-lambda";
 import {globSync} from "glob";
 import * as Path from "path";
 
 interface Endpoint {
     lambda: LambdaCategory,
-    path: string
+    path: string,
+    methods: HttpMethod []
 }
 
 enum LambdaCategory {
@@ -19,80 +20,111 @@ enum LambdaCategory {
     sale = "sale",
     account = "account",
     suppliedItem = "suppliedItem",
-    purchaseOrder = "purchaseOrder"
+    purchaseOrder = "purchaseOrder",
+    login = "login",
+    optimizer = "optimizer"
 }
 
 
 const endpoints: Endpoint[] = [
     {
         lambda: LambdaCategory.item,
-        path: "/items"
+        path: "/items",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.item,
-        path: "/itemSearch"
+        path: "/itemSearch",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.item,
-        path: "/item/{itemID}"
+        path: "/item/{itemID}",
+        methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE]
     }, {
         lambda: LambdaCategory.item,
-        path: "/addItem"
+        path: "/addItem",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.warehouse,
-        path: "/warehouses"
+        path: "/warehouses",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.warehouse,
-        path: "/warehouseSearch"
+        path: "/warehouseSearch",
+        methods: [HttpMethod.PUT]
     }, {
         lambda: LambdaCategory.warehouse,
-        path: "/warehouse/{warehouseID}"
+        path: "/warehouse/{warehouseID}",
+        methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE]
     }, {
         lambda: LambdaCategory.warehouse,
-        path: "/addWarehouse"
+        path: "/addWarehouse",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.vendor,
-        path: "/vendors"
+        path: "/vendors",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.vendor,
-        path: "/vendorSearch"
+        path: "/vendorSearch",
+        methods: [HttpMethod.PUT]
     }, {
         lambda: LambdaCategory.vendor,
-        path: "/vendor/{vendorId}"
+        path: "/vendor/{vendorId}",
+        methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE]
     }, {
         lambda: LambdaCategory.vendor,
-        path: "/addVendor"
+        path: "/addVendor",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.sale,
-        path: "/salesHistory"
+        path: "/salesHistory",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.account,
-        path: "/accountSettings"
+        path: "/accountSettings",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.account,
-        path: "/updateAccount"
+        path: "/updateAccount",
+        methods: [HttpMethod.PUT]
     }, {
         lambda: LambdaCategory.sale,
-        path: "/makeSale"
+        path: "/makeSale",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.suppliedItem,
-        path: "/suppliedItems"
+        path: "/suppliedItems",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.suppliedItem,
-        path: "/suppliedItemSearch"
+        path: "/suppliedItemSearch",
+        methods: [HttpMethod.PUT]
     }, {
         lambda: LambdaCategory.suppliedItem,
-        path: "/addSuppliedItem"
+        path: "/addSuppliedItem",
+        methods: [HttpMethod.POST]
     }, {
         lambda: LambdaCategory.purchaseOrder,
-        path: "/purchaseOrders"
+        path: "/purchaseOrders",
+        methods: [HttpMethod.GET]
     }, {
         lambda: LambdaCategory.purchaseOrder,
-        path: "/purchaseOrderSearch"
+        path: "/purchaseOrderSearch",
+        methods: [HttpMethod.PUT]
     }, {
         lambda: LambdaCategory.purchaseOrder,
-        path: "/addPurchaseOrder"
+        path: "/addPurchaseOrder",
+        methods: [HttpMethod.POST]
+    },{
+        lambda: LambdaCategory.login,
+        path: "/login",
+        methods: [HttpMethod.POST]
+    },{
+        lambda: LambdaCategory.login,
+        path: "/logout",
+        methods: [HttpMethod.POST]
     },
-
-]
+];
 
 export class ApiStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: StackProps) {
@@ -102,17 +134,6 @@ export class ApiStack extends cdk.Stack {
         const httpAPI = new HttpApi(this, "Api", {
             defaultIntegration: cfIntegration
         });
-        //const endpointFunctions = JSON.parse(this.resolve(cdk.Fn.importValue("EndpointFunctionArns")));
-        const loginEndpoint = Function.fromFunctionArn(this, "login", "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-login68DC89FC-Pa2QdzGh816V")
-
-        const lambdaHttpIntegration = new HttpLambdaIntegration("LoginLambdaIntegration", loginEndpoint)
-
-        httpAPI.addRoutes({
-            path: "/login/hello",
-            methods: [HttpMethod.GET],
-            integration: lambdaHttpIntegration
-        });
-
 
         httpAPI.addRoutes({
             path: "/",
@@ -147,29 +168,17 @@ export class ApiStack extends cdk.Stack {
         const arns = categories
             .map(value => `${value}ARN`)
             .map(value => Fn.importValue(value))
-        // .map(value => this.resolve(value));
 
         let integrations: any = categories.map((value, index) => {
             return {
                 [value as LambdaCategory]: new HttpLambdaIntegration(`${value}Integration`, Function.fromFunctionArn(this, `${value}Fn`, arns[index])),
-
             }
         }).reduce((previousValue, currentValue) => Object.assign(previousValue, currentValue))
-        console.log(LambdaCategory)
-        console.log(categories)
-        console.log(arns)
-        console.log(integrations)
-
-        httpAPI.addRoutes({
-            path: "/items2",
-            methods: [HttpMethod.GET],
-            integration: new HttpLambdaIntegration(`Integration`, Function.fromFunctionArn(this, "items2", "arn:aws:lambda:us-east-2:240617664661:function:LambdaStack-itemDD1DC579-6vyJV0FK8fkI"))
-        });
 
         endpoints.forEach(value =>
             httpAPI.addRoutes({
                 path: value.path,
-                methods: [HttpMethod.GET],
+                methods: value.methods,
                 integration: integrations[value.lambda]
             })
         )
