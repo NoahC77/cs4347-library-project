@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import {useState, useContext, useEffect} from 'react'
 import { Context } from '../App'
 
 import Option from '../components/option'
@@ -8,6 +8,7 @@ import Title from '../components/title'
 import Item from './item'
 import AddItem from './add-item'
 
+import axios from "axios";
 function populateItems()
 {
   var itemList = []
@@ -27,18 +28,41 @@ function populateItems()
   return itemList
 }
 
+async function getItems() {
+  const response = await axios.get("/items");
+
+  return response.data.map( item => {
+    return {
+      name:item.item_name,
+      stock: item.current_stock,
+      itemid: item.item_id,
+      sellPrice: item.sell_price,
+      minStock: item.minimum_stock_level
+    }
+  });
+}
+
+
 function Items() {
   const { page, setPage } = useContext(Context)
-  const [ items, setItems ] = useState(populateItems)
+  const [ items, setItems ] = useState([])
+  // populateItems
+  useEffect(()=>{
+    getItems().then(response => {
+      setItems(response);
+    });
+  },[]);
+
 
   return (
     <>
       <Title>Items</Title>
 
       <Search onAddClick={() => setPage(<AddItem/>)}/>
-      
-      {items.map( elem => 
-        <Option 
+
+      {items.map( (elem,index) =>
+        <Option
+          key={elem.itemid}
           text1={elem.name}
           text2={elem.stock}
           className2="text-right"
@@ -49,11 +73,11 @@ function Items() {
             minStock={elem.minStock}
             sellPrice={elem.sellPrice}
           />)}
-        /> 
+        />
       )}
 
       <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
-        Page {1} of {10} 
+        Page {1} of {10}
         <div className="
           h-[5vh] w-[5vw] bg-[#2288BB] rounded-[5px]
           text-white text-[4vh] leading-none text-center [cursor:pointer]
