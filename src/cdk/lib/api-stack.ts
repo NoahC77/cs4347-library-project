@@ -123,6 +123,14 @@ const endpoints: Endpoint[] = [
         lambda: LambdaCategory.login,
         path: "/logout",
         methods: [HttpMethod.POST]
+    },{
+        lambda: LambdaCategory.optimizer,
+        path: "/lowstock",
+        methods: [HttpMethod.GET]
+    },{
+        lambda: LambdaCategory.optimizer,
+        path: "/autopurchaseorder",
+        methods: [HttpMethod.PUT]
     },
 ];
 
