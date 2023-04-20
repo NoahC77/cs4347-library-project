@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,67 +43,80 @@ public class Handler implements RequestStreamHandler {
     @AllArgsConstructor
     public static class Employee {
         //These fields are the fields that are present on the item table
-        public String vendorName;
+        public String username;
+        public String password;
+        public String first_name;
+        public String last_name;
+        public String job_title;
         public String state;
         public String city;
-        public String zipCode;
+        public String zip_code;
         public String street;
-        public String aptNum;
+        public String apt_num;
     }
-
+    @AllArgsConstructor
+    private static class UpdateEmployeeResponse {
+        public String response;
+        public int errorCode;
+    }
     private static void defineEndpoints() {
-        listVendorsEndpoint();
-        getVendorEndpoint();
+        listAccountSettingsEndpoint();
+        updateAccountSettingsEndpoint();
     }
 
-    private static void listVendorsEndpoint(){
+    private static void listAccountSettingsEndpoint(){
         Gson gson = new Gson();
-        get("/vendors", (req, res) -> {
+        get("/accountSettings", (req, res) -> {
+            String token = req.headers("Authorization");
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM Employee WHERE token = '"+token+"' ;");
 
-            ArrayList<Vendor> orders = new ArrayList<>();
+            ArrayList<Employee> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Vendor vendor = new Vendor(
-                        resultSet.getString("vendor_name"),
-                        resultSet.getString("city"),
+                Employee e = new Employee(
+                        resultSet.getString("username"),
+                        resultSet.getString("password"),
+                        resultSet.getString("first_name"),
+                        resultSet.getString("last_name"),
+                        resultSet.getString("job_title"),
                         resultSet.getString("state"),
-                        resultSet.getString("street"),
+                        resultSet.getString("city"),
                         resultSet.getString("zip_code"),
-                        resultSet.getString("apt_code")
+                        resultSet.getString("street"),
+                        resultSet.getString("apt_num")
                 );
 
-                orders.add(vendor);
+                orders.add(e);
             }
             return orders;
         },gson::toJson);
     }
-
-    private static void getVendorEndpoint(){
+    private static void updateAccountSettingsEndpoint(){
         Gson gson = new Gson();
-        get("/vendor/:vendor_name", (req, res) -> {
-            String vendor_name = req.params(":vendor_name");
-            Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor WHERE vendor_name = '"+vendor_name+"';");
-            //VALUE ('"+pid+"','"+tid+"','"+rid+"',"+tspent+",'"+des+"')")
+        get("/accountSettings", (req, res) -> {
+            String token = req.headers("Authorization");
+            Employee e = gson.fromJson(req.body(), Employee.class);
+            int Check = updateAccountSettings(e, token);
+            UpdateEmployeeResponse employeeResponse = new UpdateEmployeeResponse("Success", 0);
+            return employeeResponse;
+        }, gson::toJson);
 
-            ArrayList<Vendor> orders = new ArrayList<>();
-            while (resultSet.next()) {
-                Vendor vendor = new Vendor(
-                        resultSet.getString("vendor_name"),
-                        resultSet.getString("city"),
-                        resultSet.getString("state"),
-                        resultSet.getString("street"),
-                        resultSet.getString("zip_code"),
-                        resultSet.getString("apt_code")
-                );
-
-                orders.add(vendor);
-            }
-            return orders;
-        },gson::toJson);
     }
-
+    private static int updateAccountSettings(Employee e, String t) throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+            statement.execute("UPDATE employee " +
+                    "SET username = '"+e.username+"', " +
+                        "password = '"+e.password+"'" +
+                        "first_name = '"+e.first_name+"'" +
+                        "last_name = '"+e.last_name+"'" +
+                        "state = '"+e.state+"'" +
+                        "city = '"+e.city+"'" +
+                        "zip_code = '"+e.zip_code+"'" +
+                        "street = '"+e.street+"'" +
+                        "apt_num = '"+e.apt_num+"'" +
+                    " WHERE token = '"+t+"'; ");
+        return 0;
+    }
 
 
 }

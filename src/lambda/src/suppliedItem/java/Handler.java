@@ -5,6 +5,7 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import spark.Spark;
 
@@ -40,64 +41,63 @@ public class Handler implements RequestStreamHandler {
     }
 
     @AllArgsConstructor
-    public static class Warehouse {
+    public static class suppliedItem {
         //These fields are the fields that are present on the item table
-        public String ware_id;
-        public int sqft;
-        public String state;
-        public String city;
-        public String street;
-        public String wareName;
+        @SerializedName("vendor_id")
+        public String vendorId;
+        @SerializedName("item_id")
+        public String itemId;
+        @SerializedName("vendor_price")
+        public int vendorPrice;
+        @SerializedName("quantity")
+        public int quantity;
+
     }
 
     private static void defineEndpoints() {
-        listWarehousesEndpoint();
-        getWarehouseEndpoint();
+        listSuppliedItemsEndpoint();
+        getSuppliedItemEndpoint();
     }
 
-    private static void listWarehousesEndpoint(){
+    private static void listSuppliedItemsEndpoint() {
         Gson gson = new Gson();
-        get("/warehouses", (req, res) -> {
+        get("/suppliedItems", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM warehouse;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item;");
 
-            ArrayList<Warehouse> orders = new ArrayList<>();
+            ArrayList<suppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Warehouse warehouse = new Warehouse(
-                        resultSet.getString("ware_id"),
-                        resultSet.getInt("sqft"),
-                        resultSet.getString("city"),
-                        resultSet.getString("state"),
-                        resultSet.getString("street"),
-                        resultSet.getString("ware_name")
+                suppliedItem item = new suppliedItem(
+                        resultSet.getString("vendor_id"),
+                        resultSet.getString("item_id"),
+                        resultSet.getInt("vendor_price"),
+                        resultSet.getInt("quantity")
                 );
 
-                orders.add(warehouse);
+                orders.add(item);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
 
-    private static void getWarehouseEndpoint(){
+    private static void getSuppliedItemEndpoint(){
         Gson gson = new Gson();
-        get("/warehouse/:ware_name", (req, res) -> {
-            String ware_name = req.params(":ware_name");
+        get("/suppliedItem/:vendor_id:vendor_price", (req, res) -> {
+            String vendor_id = req.params(":vendor_id");
+            String vendor_price = req.params(":vendor_price");
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM warehouse WHERE ware_name = '"+ware_name+"';");
-            //VALUE ('"+pid+"','"+tid+"','"+rid+"',"+tspent+",'"+des+"')")
 
-            ArrayList<Warehouse> orders = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE vendor_id = '"+vendor_id+"' " +
+                    "AND vendor_price = '"+vendor_price+"'  ;");
+            ArrayList<suppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
-                Warehouse warehouse = new Warehouse(
-                        resultSet.getString("ware_id"),
-                        resultSet.getInt("sqft"),
-                        resultSet.getString("city"),
-                        resultSet.getString("state"),
-                        resultSet.getString("street"),
-                        resultSet.getString("ware_name")
+                suppliedItem item = new suppliedItem(
+                        resultSet.getString("vendor_id"),
+                        resultSet.getString("item_id"),
+                        resultSet.getInt("vendor_price"),
+                        resultSet.getInt("quantity")
                 );
-
-                orders.add(warehouse);
+                orders.add(item);
             }
             return orders;
         },gson::toJson);
