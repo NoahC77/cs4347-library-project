@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
+import software.amazon.awssdk.utils.Pair;
 import spark.Spark;
 
 import java.io.IOException;
@@ -17,7 +18,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static spark.Spark.*;
 
@@ -66,31 +66,31 @@ public class Handler implements RequestStreamHandler {
                 String[] vendorIds = suppliedItems.stream().map(suppliedItem -> suppliedItem.vendorId).toArray(String[]::new);
                 int requestedQuantity = autoPurchaseOrderRequest.quantity;
 
-                int minimumCost = findMinimumCostCombination(quantities, vendorPrices, requestedQuantity);
-                List<ItemCostQuantity> poItems = unboundedKnapsack(quantities, vendorPrices, minimumCost);
+                int minimumCost = findMinimumCost(quantities, vendorPrices, requestedQuantity);
+                List<ItemCostQuantity> poItems = findSupliedItemsForCost(quantities, vendorPrices, minimumCost);
 
-                List<SuppliedItem> supplied = poItems.stream().map(itemCostQuantity ->
-                        suppliedItems.stream().filter(suppliedItem ->
-                                        suppliedItem.vendorId.equals(vendorIds[itemCostQuantity.itemIndex]) &&
-                                                suppliedItem.quantity == itemCostQuantity.baseQuantity)
-                                .findFirst().get()).collect(Collectors.toList());
+
+                List<Pair<SuppliedItem, Integer>> supplied = poItems.stream().map(itemCostQuantity -> Pair.of(suppliedItems.stream().filter(suppliedItem ->
+                                suppliedItem.vendorId.equals(vendorIds[itemCostQuantity.itemIndex]) &&
+                                        suppliedItem.quantity == itemCostQuantity.baseQuantity)
+                        .findFirst().get(), itemCostQuantity.multiplier)).collect(Collectors.toList());
 
 
                 return supplied.stream()
-                        .map(suppliedItem -> new PurchaseOrderRequest(suppliedItem.itemId,
-                                suppliedItem.quantity,
-                                suppliedItem.vendorPrice,
-                                suppliedItem.vendorId,
-                                new Date()))
+                        .map(suppliedItem -> new PurchaseOrderRequest(suppliedItem.left().itemId,
+                                suppliedItem.left().quantity,
+                                suppliedItem.left().vendorPrice,
+                                suppliedItem.left().vendorId,
+                                suppliedItem.right()))
                         .collect(Collectors.toList());
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return new GenericResponse(Collections.emptyList(), false, 500, Collections.emptyMap(), "Internal Server Error");
+            return new GenericResponse(Collections.emptyList(), false, 500, Collections.singletonMap("content-type", "text/plain"), "Exception thrown.");
         }, gson::toJson);
     }
 
-    public static int findMinimumCostCombination(int[] quantities, int[] costs, int targetQuantity) {
+    public static int findMinimumCost(int[] quantities, int[] costs, int targetQuantity) {
         int n = quantities.length;
         int[][] dp = new int[targetQuantity + 1][n];
 
@@ -118,7 +118,7 @@ public class Handler implements RequestStreamHandler {
         public int cost;
     }
 
-    public static List<ItemCostQuantity> unboundedKnapsack(int[] values, int[] weights, int capacity) {
+    public static List<ItemCostQuantity> findSupliedItemsForCost(int[] values, int[] weights, int capacity) {
         int n = values.length;
         int[] dp = new int[capacity + 1];
         int[][] itemQuantities = new int[capacity + 1][n];
@@ -153,7 +153,7 @@ public class Handler implements RequestStreamHandler {
 
     private static List<SuppliedItem> getSuppliedItems(String itemId) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE item_id = " + itemId);
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE item_id = '" + itemId + "'");
         List<SuppliedItem> suppliedItems = new ArrayList<>();
         while (resultSet.next()) {
             SuppliedItem suppliedItem = new SuppliedItem(

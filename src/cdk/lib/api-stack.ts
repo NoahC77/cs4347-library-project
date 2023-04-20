@@ -128,7 +128,7 @@ const endpoints: Endpoint[] = [
         path: "/lowstock",
         methods: [HttpMethod.GET]
     },{
-        lambda: LambdaCategory.optimizer,
+            lambda: LambdaCategory.optimizer,
         path: "/autopurchaseorder",
         methods: [HttpMethod.PUT]
     },

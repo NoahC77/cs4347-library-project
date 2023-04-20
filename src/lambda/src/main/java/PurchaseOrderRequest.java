@@ -15,6 +15,7 @@ public class PurchaseOrderRequest {
     public int price;
     @SerializedName("vendor_id")
     public String vendorId;
-    @SerializedName("purchase_date")
-    public Date purchaseDate;
+
+    @SerializedName("count")
+    public int count;
 }
