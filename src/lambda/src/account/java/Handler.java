@@ -93,7 +93,7 @@ public class Handler implements RequestStreamHandler {
     }
     private static void updateAccountSettingsEndpoint(){
         Gson gson = new Gson();
-        get("/accountSettings", (req, res) -> {
+        get("/updateAccount", (req, res) -> {
             String token = req.headers("Authorization");
             Employee e = gson.fromJson(req.body(), Employee.class);
             int Check = updateAccountSettings(e, token);

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,7 +42,7 @@ public class Handler implements RequestStreamHandler {
     }
 
     @AllArgsConstructor
-    public static class suppliedItem {
+    public static class SuppliedItem {
         //These fields are the fields that are present on the item table
         @SerializedName("vendor_id")
         public String vendorId;
@@ -57,6 +58,7 @@ public class Handler implements RequestStreamHandler {
     private static void defineEndpoints() {
         listSuppliedItemsEndpoint();
         getSuppliedItemEndpoint();
+        addSuppliedItemEndpoint();
     }
 
     private static void listSuppliedItemsEndpoint() {
@@ -65,9 +67,9 @@ public class Handler implements RequestStreamHandler {
             Statement statement = TestLambdaHandler.conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item;");
 
-            ArrayList<suppliedItem> orders = new ArrayList<>();
+            ArrayList<SuppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
-                suppliedItem item = new suppliedItem(
+                SuppliedItem item = new SuppliedItem(
                         resultSet.getString("vendor_id"),
                         resultSet.getString("item_id"),
                         resultSet.getInt("vendor_price"),
@@ -89,9 +91,9 @@ public class Handler implements RequestStreamHandler {
 
             ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE vendor_id = '"+vendor_id+"' " +
                     "AND vendor_price = '"+vendor_price+"'  ;");
-            ArrayList<suppliedItem> orders = new ArrayList<>();
+            ArrayList<SuppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
-                suppliedItem item = new suppliedItem(
+                SuppliedItem item = new SuppliedItem(
                         resultSet.getString("vendor_id"),
                         resultSet.getString("item_id"),
                         resultSet.getInt("vendor_price"),
@@ -103,6 +105,25 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
 
+    private static void addSuppliedItemEndpoint(){
+        Gson gson = new Gson();
+        get("/addSuppliedItem", (req, res) -> {
+            SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
+            addSuppliedItem(item);
+            return "Success";
+
+
+
+
+
+
+        },gson::toJson);
+    }
+    private static void addSuppliedItem(SuppliedItem item)throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
+                "VALUES ('"+suppliedItem.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+    }
 
 
 }
