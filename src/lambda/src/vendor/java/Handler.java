@@ -82,6 +82,40 @@ public class Handler implements RequestStreamHandler {
         }, gson::toJson);
         
         addVendorEndpoint();
+        searchVendorEndpoint();
+    }
+
+    private static void searchVendorEndpoint() {
+        Gson gson = new Gson();
+        put("/vendorSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM vendor WHERE vendor_name LIKE ? OR city LIKE ? OR state LIKE ? OR street LIKE ? OR zip_code LIKE ? OR apt_code LIKE ?;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%" + searchRequest.query + "%");
+            statement.setString(2, "%" + searchRequest.query + "%");
+            statement.setString(3, "%" + searchRequest.query + "%");
+            statement.setString(4, "%" + searchRequest.query + "%");
+            statement.setString(5, "%" + searchRequest.query + "%");
+            statement.setString(6, "%" + searchRequest.query + "%");
+
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Vendor> vendors = new ArrayList<>();
+            while (resultSet.next()) {
+                Vendor vendor = new Vendor(
+                        resultSet.getString("vendor_name"),
+                        resultSet.getString("state"),
+                        resultSet.getString("city"),
+                        resultSet.getString("zip_code"),
+                        resultSet.getString("street"),
+                        resultSet.getString("apt_code"),
+                        resultSet.getInt("vendor_id")
+                );
+
+                vendors.add(vendor);
+            }
+            return vendors;
+        }, gson::toJson);
     }
 
     private static void listVendorsEndpoint() {
