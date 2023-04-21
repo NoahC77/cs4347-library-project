@@ -123,21 +123,25 @@ const endpoints: Endpoint[] = [
         lambda: LambdaCategory.purchaseOrder,
         path: "/addPurchaseOrder",
         methods: [HttpMethod.POST]
-    },{
+    }, {
         lambda: LambdaCategory.login,
         path: "/login",
         methods: [HttpMethod.POST]
-    },{
+    }, {
         lambda: LambdaCategory.login,
         path: "/logout",
         methods: [HttpMethod.POST]
-    },{
+    }, {
         lambda: LambdaCategory.optimizer,
         path: "/lowstock",
         methods: [HttpMethod.GET]
-    },{
-            lambda: LambdaCategory.optimizer,
+    }, {
+        lambda: LambdaCategory.optimizer,
         path: "/autopurchaseorder",
+        methods: [HttpMethod.PUT]
+    },{
+        lambda: LambdaCategory.optimizer,
+        path: "/auto-cycle-po",
         methods: [HttpMethod.PUT]
     },
 ];
