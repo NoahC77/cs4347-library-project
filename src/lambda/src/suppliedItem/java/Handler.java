@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
+import software.amazon.awssdk.services.rds.endpoints.internal.Value;
 import spark.Spark;
 
 import java.io.IOException;
@@ -18,8 +19,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static spark.Spark.get;
-import static spark.Spark.redirect;
+import static spark.Spark.*;
 
 public class Handler implements RequestStreamHandler {
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
@@ -45,13 +45,15 @@ public class Handler implements RequestStreamHandler {
     public static class SuppliedItem {
         //These fields are the fields that are present on the item table
         @SerializedName("vendor_id")
-        public String vendorId;
+        public int vendorId;
         @SerializedName("item_id")
-        public String itemId;
+        public int itemId;
         @SerializedName("vendor_price")
         public int vendorPrice;
         @SerializedName("quantity")
         public int quantity;
+        @SerializedName("supplied_item_id")
+        public int suppliedItemId;
 
     }
 
@@ -70,10 +72,11 @@ public class Handler implements RequestStreamHandler {
             ArrayList<SuppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
                 SuppliedItem item = new SuppliedItem(
-                        resultSet.getString("vendor_id"),
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("vendor_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("vendor_price"),
-                        resultSet.getInt("quantity")
+                        resultSet.getInt("quantity"),
+                        resultSet.getInt("supplied_item_id")
                 );
 
                 orders.add(item);
@@ -84,20 +87,20 @@ public class Handler implements RequestStreamHandler {
 
     private static void getSuppliedItemEndpoint(){
         Gson gson = new Gson();
-        get("/suppliedItem/:vendor_id:vendor_price", (req, res) -> {
-            String vendor_id = req.params(":vendor_id");
-            String vendor_price = req.params(":vendor_price");
+        get("/suppliedItem/:supplied_item_id", (req, res) -> {
+            String s = req.params(":supplied_item_id");
+            int supplied_item_id = Integer.parseInt(s);
             Statement statement = TestLambdaHandler.conn.createStatement();
 
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE vendor_id = '"+vendor_id+"' " +
-                    "AND vendor_price = '"+vendor_price+"'  ;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE supplied_item_id = '"+supplied_item_id+"' ;");
             ArrayList<SuppliedItem> orders = new ArrayList<>();
             while (resultSet.next()) {
                 SuppliedItem item = new SuppliedItem(
-                        resultSet.getString("vendor_id"),
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("vendor_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("vendor_price"),
-                        resultSet.getInt("quantity")
+                        resultSet.getInt("quantity"),
+                        resultSet.getInt("supplied_item_id")
                 );
                 orders.add(item);
             }
@@ -107,22 +110,16 @@ public class Handler implements RequestStreamHandler {
 
     private static void addSuppliedItemEndpoint(){
         Gson gson = new Gson();
-        get("/addSuppliedItem", (req, res) -> {
+        post("/addSuppliedItem", (req, res) -> {
             SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
             addSuppliedItem(item);
             return "Success";
-
-
-
-
-
-
         },gson::toJson);
     }
     private static void addSuppliedItem(SuppliedItem item)throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
-                "VALUES ('"+suppliedItem.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+        statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
+                "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
     }
 
 

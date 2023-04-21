@@ -45,7 +45,7 @@ public class Handler implements RequestStreamHandler {
     public static class Item {
         //These fields are the fields that are present on the item table
         @SerializedName("item_id")
-        public String itemId;
+        public int itemId;
         @SerializedName("current_stock")
         public int currentStock;
         @SerializedName("item_name")
@@ -104,7 +104,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Item> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Item item = new Item(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("sell_price"),
@@ -120,14 +120,15 @@ public class Handler implements RequestStreamHandler {
     private static void getItemEndpoint(){
         Gson gson = new Gson();
         get("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
             Statement statement = TestLambdaHandler.conn.createStatement();
 
             ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+item_id+"';");
             ArrayList<Item> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Item item = new Item(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("sell_price"),
@@ -156,13 +157,14 @@ public class Handler implements RequestStreamHandler {
     private static void updateItemEndpoint() {
         Gson gson = new Gson();
         put("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
             Item item = gson.fromJson(req.body(), Item.class);
             updateItem(item, item_id);
             return "Success";
         },gson::toJson);
     }
-    private static void updateItem(Item item, String item_id)throws SQLException{
+    private static void updateItem(Item item, int item_id)throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("UPDATE item " +
                 "SET item_name = '"+item.itemName+"', " +
@@ -173,13 +175,13 @@ public class Handler implements RequestStreamHandler {
     private static void deleteItemEndpoint() {
         Gson gson = new Gson();
         delete("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
-            Item item = gson.fromJson(req.body(), Item.class);
-            deleteItem(item, item_id);
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
+            deleteItem(item_id);
             return "Success";
         },gson::toJson);
     }
-    private static void deleteItem(Item item, String item_id)throws SQLException{
+    private static void deleteItem(int item_id)throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("DELETE FROM item WHERE item_id = '"+item_id+"'; ");
     }
