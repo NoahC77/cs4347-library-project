@@ -35,7 +35,7 @@ const endpoints: Endpoint[] = [
     }, {
         lambda: LambdaCategory.item,
         path: "/itemSearch",
-        methods: [HttpMethod.POST]
+        methods: [HttpMethod.PUT]
     }, {
         //done
         lambda: LambdaCategory.item,

@@ -12,6 +12,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -61,6 +62,37 @@ public class Handler implements RequestStreamHandler {
         addItemEndpoint();
         updateItemEndpoint();
         deleteItemEndpoint();
+        searchItemEndpoint();
+    }
+
+    private static class SearchItemRequest {
+        @SerializedName("query")
+        public String query;
+    }
+
+    private static void searchItemEndpoint() {
+        Gson gson = new Gson();
+        put("/itemSearch", (req, res) -> {
+            SearchItemRequest searchItemRequest = gson.fromJson(req.body(), SearchItemRequest.class);
+            String query = "SELECT * FROM item WHERE item_name LIKE ? ;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%"+searchItemRequest.query+"%");
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Item> items = new ArrayList<>();
+            while (resultSet.next()) {
+                Item item = new Item(
+                        resultSet.getString("item_id"),
+                        resultSet.getInt("current_stock"),
+                        resultSet.getString("item_name"),
+                        resultSet.getInt("sell_price"),
+                        resultSet.getInt("minimum_stock_level")
+                );
+
+                items.add(item);
+            }
+            return items;
+        }, gson::toJson);
     }
 
     private static void listItemsEndpoint() {
