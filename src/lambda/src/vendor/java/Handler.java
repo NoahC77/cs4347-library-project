@@ -218,5 +218,4 @@ public class Handler implements RequestStreamHandler {
                 "'"+vendor.zipCode+"','"+vendor.aptCode+"','"+vendor.vendorId+"');");
     }
 
-
 }
