@@ -37,13 +37,6 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    public static class PurchaseOrder {
-        public String id;
-        public int quantity;
-        public int price;
-        public Date purchaseDate;
-
-    }
 
     private static void defineEndpoints() {
         defineGetPurchaseOrders();
