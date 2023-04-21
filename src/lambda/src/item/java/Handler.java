@@ -13,12 +13,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static spark.Spark.get;
-import static spark.Spark.redirect;
+import static spark.Spark.*;
 
 public class Handler implements RequestStreamHandler {
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
@@ -58,6 +58,9 @@ public class Handler implements RequestStreamHandler {
     private static void defineEndpoints() {
         listItemsEndpoint();
         getItemEndpoint();
+        addItemEndpoint();
+        updateItemEndpoint();
+        deleteItemEndpoint();
     }
 
     private static void listItemsEndpoint() {
@@ -102,6 +105,51 @@ public class Handler implements RequestStreamHandler {
             }
             return orders;
         },gson::toJson);
+    }
+
+    private static void addItemEndpoint() {
+        Gson gson = new Gson();
+        post("/addItem", (req, res) -> {
+            Item item = gson.fromJson(req.body(), Item.class);
+            addItem(item);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void addItem(Item item) throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
+                "VALUES ('"+item.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+    }
+
+    private static void updateItemEndpoint() {
+        Gson gson = new Gson();
+        put("/item/:item_id", (req, res) -> {
+            String item_id = req.params(":item_id");
+            Item item = gson.fromJson(req.body(), Item.class);
+            updateItem(item, item_id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void updateItem(Item item, String item_id)throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("UPDATE item " +
+                "SET item_name = '"+item.itemName+"', " +
+                "minimum_stock_level = '"+item.minimumStockLevel+"'," +
+                "sell_Price = '"+item.sellPrice+"'" +
+                " WHERE item_id = '"+item_id+"'; ");
+    }
+    private static void deleteItemEndpoint() {
+        Gson gson = new Gson();
+        delete("/item/:item_id", (req, res) -> {
+            String item_id = req.params(":item_id");
+            Item item = gson.fromJson(req.body(), Item.class);
+            deleteItem(item, item_id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void deleteItem(Item item, String item_id)throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("DELETE FROM item WHERE item_id = '"+item_id+"'; ");
     }
 
 

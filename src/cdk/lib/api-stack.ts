@@ -28,6 +28,7 @@ enum LambdaCategory {
 
 const endpoints: Endpoint[] = [
     {
+        //done
         lambda: LambdaCategory.item,
         path: "/items",
         methods: [HttpMethod.GET]
@@ -36,18 +37,22 @@ const endpoints: Endpoint[] = [
         path: "/itemSearch",
         methods: [HttpMethod.POST]
     }, {
+        //done
         lambda: LambdaCategory.item,
         path: "/item/{itemID}",
         methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE]
     }, {
+        //done
         lambda: LambdaCategory.item,
         path: "/addItem",
         methods: [HttpMethod.POST]
     }, {
+        //done
         lambda: LambdaCategory.warehouse,
         path: "/warehouses",
         methods: [HttpMethod.GET]
     }, {
+
         lambda: LambdaCategory.warehouse,
         path: "/warehouseSearch",
         methods: [HttpMethod.PUT]
@@ -60,6 +65,7 @@ const endpoints: Endpoint[] = [
         path: "/addWarehouse",
         methods: [HttpMethod.POST]
     }, {
+        //done
         lambda: LambdaCategory.vendor,
         path: "/vendors",
         methods: [HttpMethod.GET]
@@ -76,10 +82,12 @@ const endpoints: Endpoint[] = [
         path: "/addVendor",
         methods: [HttpMethod.POST]
     }, {
+        //done
         lambda: LambdaCategory.sale,
         path: "/salesHistory",
         methods: [HttpMethod.GET]
     }, {
+        //done
         lambda: LambdaCategory.account,
         path: "/accountSettings",
         methods: [HttpMethod.GET]
