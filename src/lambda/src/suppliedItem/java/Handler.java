@@ -60,6 +60,8 @@ public class Handler implements RequestStreamHandler {
     private static void defineEndpoints() {
         listSuppliedItemsEndpoint();
         getSuppliedItemEndpoint();
+        updateSuppliedItemEndpoint();
+        deleteSuppliedItemEndpoint();
         addSuppliedItemEndpoint();
         searchSuppliedItemEndpoint();
     }
@@ -158,6 +160,41 @@ public class Handler implements RequestStreamHandler {
             }
             return orders;
         },gson::toJson);
+    }
+
+    private static void updateSuppliedItemEndpoint(){
+        Gson gson = new Gson();
+        put("/suppliedItem/:supplied_item_id",(req,res) -> {
+            String s = req.params(":supplied_item_id");
+            int id = Integer.parseInt(s);
+            SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
+            updateSuppliedItem(item,id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void updateSuppliedItem(SuppliedItem item , int id) throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("UPDATE supplied_item " +
+                "SET vendor_id = '"+item.vendorId+"', " +
+                "item_id = '"+item.itemId+"'," +
+                "vendor_price = '"+item.vendorPrice+"'," +
+                "quantity = '"+item.quantity+"'," +
+                "supplied_item_id = '"+id+"'" +
+                " WHERE supplied_item_id = '"+id+"'; ");
+    }
+
+    private static void deleteSuppliedItemEndpoint(){
+        Gson gson = new Gson();
+        delete("/suppliedItem/:supplied_item_id",(req,res) -> {
+            String s = req.params(":supplied_item_id");
+            int id = Integer.parseInt(s);
+            deleteSuppliedItem(id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void deleteSuppliedItem(int id) throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("DELETE FROM supplied_item WHERE supplied_item_id = '"+id+"'; ");
     }
 
     private static void addSuppliedItemEndpoint(){
