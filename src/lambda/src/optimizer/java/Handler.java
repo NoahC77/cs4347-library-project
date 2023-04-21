@@ -13,6 +13,8 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -44,6 +46,34 @@ public class Handler implements RequestStreamHandler {
     private static void defineEndpoints() {
         lowStockEndpoint();
         autoPurchaseOrderEndpoint();
+        autoCyclePOEndpoint();
+    }
+
+    private static class AutoCyclePORequest {
+        @SerializedName("item_id")
+        public String itemId;
+    }
+
+    private static void autoCyclePOEndpoint() {
+        Gson gson = new Gson();
+        put("/auto-cycle-po", (req, res) -> {
+            AutoCyclePORequest autoCyclePORequest = gson.fromJson(req.body(), AutoCyclePORequest.class);
+            String query = "SELECT AVG(sq.sales_count) as average FROM ( " +
+                    "SELECT COUNT(*) as sales_count, date_sold " +
+                    "FROM sales_record " +
+                    "WHERE item_id = ? " +
+                    "GROUP BY CEILING(DATEDIFF(date_sold, ?) / ? )" +
+                    "HAVING Count(*) >= 1 " +
+                    ") sq ;";
+
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, autoCyclePORequest.itemId);
+            statement.setDate(2, Date.valueOf("2020-01-01"));
+            statement.setInt(3, 7);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getDouble("average");
+        }, gson::toJson);
     }
 
     private static class AutoPurchaseOrderRequest {
