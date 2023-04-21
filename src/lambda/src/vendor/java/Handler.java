@@ -11,13 +11,13 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static spark.Spark.get;
-import static spark.Spark.redirect;
+import static spark.Spark.*;
 
 public class Handler implements RequestStreamHandler {
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
@@ -53,9 +53,61 @@ public class Handler implements RequestStreamHandler {
     private static void defineEndpoints() {
         listVendorsEndpoint();
         getVendorEndpoint();
+        searchVendorEndpoint();
+        addVendorEndpoint();
     }
 
-    private static void listVendorsEndpoint(){
+    private static void addVendorEndpoint() {
+        Gson gson = new Gson();
+        put("/addVendor", (req, res) -> {
+            Vendor vendor = gson.fromJson(req.body(), Vendor.class);
+            String query = "INSERT INTO vendor (vendor_name, state, city, zip_code, street, apt_code) VALUES (?, ?, ?, ?, ?, ?);";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, vendor.vendorName);
+            statement.setString(2, vendor.state);
+            statement.setString(3, vendor.city);
+            statement.setString(4, vendor.zipCode);
+            statement.setString(5, vendor.street);
+            statement.setString(6, vendor.aptNum);
+
+            statement.executeUpdate();
+            return "Vendor added";
+        }, gson::toJson);
+    }
+
+    private static void searchVendorEndpoint() {
+        Gson gson = new Gson();
+        put("/vendorSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM vendor WHERE vendor_name LIKE ? OR city LIKE ? OR state LIKE ? OR street LIKE ? OR zip_code LIKE ? OR apt_code LIKE ?;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%" + searchRequest.query + "%");
+            statement.setString(2, "%" + searchRequest.query + "%");
+            statement.setString(3, "%" + searchRequest.query + "%");
+            statement.setString(4, "%" + searchRequest.query + "%");
+            statement.setString(5, "%" + searchRequest.query + "%");
+            statement.setString(6, "%" + searchRequest.query + "%");
+
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Vendor> vendors = new ArrayList<>();
+            while (resultSet.next()) {
+                Vendor vendor = new Vendor(
+                        resultSet.getString("vendor_name"),
+                        resultSet.getString("state"),
+                        resultSet.getString("city"),
+                        resultSet.getString("zip_code"),
+                        resultSet.getString("street"),
+                        resultSet.getString("apt_code")
+                );
+
+                vendors.add(vendor);
+            }
+            return vendors;
+        }, gson::toJson);
+    }
+
+    private static void listVendorsEndpoint() {
         Gson gson = new Gson();
         get("/vendors", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
@@ -75,15 +127,15 @@ public class Handler implements RequestStreamHandler {
                 orders.add(vendor);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
 
-    private static void getVendorEndpoint(){
+    private static void getVendorEndpoint() {
         Gson gson = new Gson();
         get("/vendor/:vendor_name", (req, res) -> {
             String vendor_name = req.params(":vendor_name");
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor WHERE vendor_name = '"+vendor_name+"';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor WHERE vendor_name = '" + vendor_name + "';");
             //VALUE ('"+pid+"','"+tid+"','"+rid+"',"+tspent+",'"+des+"')")
 
             ArrayList<Vendor> orders = new ArrayList<>();
@@ -100,9 +152,8 @@ public class Handler implements RequestStreamHandler {
                 orders.add(vendor);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
-
 
 
 }
