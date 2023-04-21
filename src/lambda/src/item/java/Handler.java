@@ -17,7 +17,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static spark.Spark.*;
 
@@ -65,18 +64,13 @@ public class Handler implements RequestStreamHandler {
         searchItemEndpoint();
     }
 
-    private static class SearchItemRequest {
-        @SerializedName("query")
-        public String query;
-    }
-
     private static void searchItemEndpoint() {
         Gson gson = new Gson();
         put("/itemSearch", (req, res) -> {
-            SearchItemRequest searchItemRequest = gson.fromJson(req.body(), SearchItemRequest.class);
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
             String query = "SELECT * FROM item WHERE item_name LIKE ? ;";
             PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
-            statement.setString(1, "%"+searchItemRequest.query+"%");
+            statement.setString(1, "%"+ searchRequest.query+"%");
             ResultSet resultSet = statement.executeQuery();
 
             ArrayList<Item> items = new ArrayList<>();
