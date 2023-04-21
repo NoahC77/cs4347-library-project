@@ -42,7 +42,7 @@ public class Handler implements RequestStreamHandler {
     @AllArgsConstructor
     public static class Warehouse {
         //These fields are the fields that are present on the item table
-        public String ware_id;
+        public int ware_id;
         public int sqft;
         public String state;
         public String city;
@@ -67,10 +67,10 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Warehouse> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Warehouse warehouse = new Warehouse(
-                        resultSet.getString("ware_id"),
+                        resultSet.getInt("ware_id"),
                         resultSet.getInt("sqft"),
-                        resultSet.getString("city"),
                         resultSet.getString("state"),
+                        resultSet.getString("city"),
                         resultSet.getString("street"),
                         resultSet.getString("ware_name")
                 );
@@ -84,17 +84,18 @@ public class Handler implements RequestStreamHandler {
     private static void getWarehouseEndpoint(){
         Gson gson = new Gson();
         get("/warehouse/:ware_id", (req, res) -> {
-            String ware_id = req.params(":ware_id");
+            String s = req.params(":ware_id");
+            int ware_id = Integer.parseInt(s);
             Statement statement = TestLambdaHandler.conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM warehouse WHERE ware_id = '"+ware_id+"';");
 
             ArrayList<Warehouse> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Warehouse warehouse = new Warehouse(
-                        resultSet.getString("ware_id"),
+                        resultSet.getInt("ware_id"),
                         resultSet.getInt("sqft"),
-                        resultSet.getString("city"),
                         resultSet.getString("state"),
+                        resultSet.getString("city"),
                         resultSet.getString("street"),
                         resultSet.getString("ware_name")
                 );
@@ -107,13 +108,14 @@ public class Handler implements RequestStreamHandler {
     private static void updateWarehouseEndpoint() {
         Gson gson = new Gson();
         put("/warehouse/:ware_id", (req, res) -> {
-            String ware_id = req.params(":ware_id");
+            String s = req.params(":ware_id");
+            int ware_id = Integer.parseInt(s);
             Warehouse warehouse = gson.fromJson(req.body(), Warehouse.class);
             updateWarehouse(warehouse, ware_id);
             return "Success";
         }, gson::toJson);
     }
-    private static void updateWarehouse(Warehouse w, String token) throws SQLException{
+    private static void updateWarehouse(Warehouse w, int token) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("UPDATE warehouse " +
                 "SET ware_name = '"+w.ware_name+"', " +
@@ -126,12 +128,13 @@ public class Handler implements RequestStreamHandler {
     private static void deleteWarehouseEndpoint() {
         Gson gson = new Gson();
         delete("/warehouse/:ware_id", (req, res) -> {
-            String ware_id = req.params(":ware_id");
+            String s = req.params(":ware_id");
+            int ware_id = Integer.parseInt(s);
             deleteWarehouse(ware_id);
             return "Success";
         }, gson::toJson);
     }
-    private static void deleteWarehouse(String token) throws SQLException{
+    private static void deleteWarehouse(int token) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("DELETE FROM warehouse WHERE ware_id = '"+token+"'; ");
     }

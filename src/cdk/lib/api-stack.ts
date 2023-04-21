@@ -107,7 +107,11 @@ const endpoints: Endpoint[] = [
         lambda: LambdaCategory.suppliedItem,
         path: "/suppliedItemSearch",
         methods: [HttpMethod.PUT]
-    }, {
+    },{
+        lambda: LambdaCategory.suppliedItem,
+        path: "/suppliedItem/{supplied_item_id}",
+        methods: [HttpMethod.GET, HttpMethod.PUT]
+    },{
         lambda: LambdaCategory.suppliedItem,
         path: "/addSuppliedItem",
         methods: [HttpMethod.POST]
