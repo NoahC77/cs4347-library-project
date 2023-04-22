@@ -164,20 +164,27 @@ public class Handler implements RequestStreamHandler {
             String s = req.params(":supplied_item_id");
             int id = Integer.parseInt(s);
             SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
-            updateSuppliedItem(item, id);
-            return "Success";
-        }, gson::toJson);
+            return updateSuppliedItem(item,id);
+        },gson::toJson);
     }
-
-    private static void updateSuppliedItem(SuppliedItem item, int id) throws SQLException {
+    private static String updateSuppliedItem(SuppliedItem item , int id) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE supplied_item " +
-                "SET vendor_id = '" + item.vendorId + "', " +
-                "item_id = '" + item.itemId + "'," +
-                "vendor_price = '" + item.vendorPrice + "'," +
-                "quantity = '" + item.quantity + "'," +
-                "supplied_item_id = '" + id + "'" +
-                " WHERE supplied_item_id = '" + id + "'; ");
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor, item WHERE vendor_id = '"+item.vendorId+"' AND " +
+                "item_id = '"+item.itemId+"';");
+        if(resultSet.next()){
+            statement.execute("UPDATE supplied_item " +
+                    "SET vendor_id = '"+item.vendorId+"', " +
+                    "item_id = '"+item.itemId+"'," +
+                    "vendor_price = '"+item.vendorPrice+"'," +
+                    "quantity = '"+item.quantity+"'," +
+                    "supplied_item_id = '"+id+"'" +
+                    " WHERE supplied_item_id = '"+id+"'; ");
+            return "Success";
+        }
+        else{
+            return "Vendor ID or Item ID Does not Exist!";
+        }
+
     }
 
     private static void deleteSuppliedItemEndpoint() {
@@ -192,22 +199,36 @@ public class Handler implements RequestStreamHandler {
 
     private static void deleteSuppliedItem(int id) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("DELETE FROM supplied_item WHERE supplied_item_id = '" + id + "'; ");
+        statement.execute("DELETE FROM supplied_item WHERE supplied_item_id = '"+id+"'; ");
+        // SQL cascades delete on 'supplies' table. Dont worry about it.
     }
 
     private static void addSuppliedItemEndpoint() {
         Gson gson = new Gson();
         post("/addSuppliedItem", (req, res) -> {
             SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
-            addSuppliedItem(item);
-            return "Success";
-        }, gson::toJson);
+            return addSuppliedItem(item);
+        },gson::toJson);
     }
-
-    private static void addSuppliedItem(SuppliedItem item) throws SQLException {
+    private static String addSuppliedItem(SuppliedItem item)throws SQLException {
+    // Adding a suppliedItem checks for the existence of the item and vendor and also adds it to 'supplies'
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity)" +
-                "VALUES ('" + item.itemId + "','" + item.vendorId + "','" + item.vendorPrice + "','" + item.quantity + "'); ");
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor, item WHERE vendor_id = '"+item.vendorId+"' AND " +
+                "item_id = '"+item.itemId+"';");
+
+        if(resultSet.next())
+        {
+            statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
+                    "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
+            statement.execute("INSERT INTO supplies (supplied_item_id, vendor_id) VALUES ('"+item.suppliedItemId+"', '"+item.vendorId+"');");
+            return "success";
+        }
+        else
+        {
+            return "Vendor ID or Item ID does not exist!";
+        }
+
+
     }
 
 
