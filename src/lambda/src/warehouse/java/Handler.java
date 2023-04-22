@@ -11,6 +11,7 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -56,6 +57,38 @@ public class Handler implements RequestStreamHandler {
         updateWarehouseEndpoint();
         deleteWarehouseEndpoint();
         addWarehouseEndpoint();
+        warehouseSearchEndpoint();
+    }
+
+    private static void warehouseSearchEndpoint() {
+        Gson gson = new Gson();
+        put("/warehouseSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM warehouse WHERE ware_name LIKE ? OR city LIKE ? OR state LIKE ? OR street LIKE ?;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%" + searchRequest.query + "%");
+            statement.setString(2, "%" + searchRequest.query + "%");
+            statement.setString(3, "%" + searchRequest.query + "%");
+            statement.setString(4, "%" + searchRequest.query + "%");
+
+
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Warehouse> orders = new ArrayList<>();
+            while (resultSet.next()) {
+                Warehouse warehouse = new Warehouse(
+                        resultSet.getInt("ware_id"),
+                        resultSet.getInt("sqft"),
+                        resultSet.getString("city"),
+                        resultSet.getString("state"),
+                        resultSet.getString("street"),
+                        resultSet.getString("ware_name")
+                );
+
+                orders.add(warehouse);
+            }
+            return orders;
+        },gson::toJson);
     }
 
     private static void listWarehousesEndpoint(){

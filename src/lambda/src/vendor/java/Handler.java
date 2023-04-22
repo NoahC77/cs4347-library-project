@@ -12,11 +12,11 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static spark.Spark.*;
 
@@ -40,34 +40,52 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    @AllArgsConstructor
-    public static class Vendor {
-        //These fields are the fields that are present on the item table
-        @SerializedName("vendor_name")
-        public String vendorName;
-        @SerializedName("city")
-        public String city;
-        @SerializedName("state")
-        public String state;
-        @SerializedName("street")
-        public String street;
-        @SerializedName("zip_code")
-        public String zipCode;
-        @SerializedName("apt_code")
-        public String aptCode;
-        @SerializedName("vendor_id")
-        public int vendorId;
-    }
-
     private static void defineEndpoints() {
         listVendorsEndpoint();
         getVendorEndpoint();
         updateVendorEndpoint();
         deleteVendorEndpoint();
+        searchVendorEndpoint();
         addVendorEndpoint();
     }
 
-    private static void listVendorsEndpoint(){
+    private static void searchVendorEndpoint() {
+        Gson gson = new Gson();
+        put("/vendorSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM vendor WHERE vendor_name LIKE ? OR city LIKE ? OR state LIKE ? OR street LIKE ? OR zip_code LIKE ? OR apt_code LIKE ?;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%" + searchRequest.query + "%");
+            statement.setString(2, "%" + searchRequest.query + "%");
+            statement.setString(3, "%" + searchRequest.query + "%");
+            statement.setString(4, "%" + searchRequest.query + "%");
+            statement.setString(5, "%" + searchRequest.query + "%");
+            statement.setString(6, "%" + searchRequest.query + "%");
+
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Vendor> vendors = new ArrayList<>();
+            while (resultSet.next()) {
+                Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
+                        resultSet.getString("vendor_name"),
+                        resultSet.getString("state"),
+                        resultSet.getString("city"),
+                        resultSet.getString("zip_code"),
+                        resultSet.getString("street"),
+                        resultSet.getString("apt_code")
+                );
+
+                vendors.add(vendor);
+            }
+            return vendors;
+        }, gson::toJson);
+        
+        addVendorEndpoint();
+        searchVendorEndpoint();
+    }
+
+    private static void listVendorsEndpoint() {
         Gson gson = new Gson();
         get("/vendors", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
@@ -76,22 +94,22 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),
                         resultSet.getString("street"),
                         resultSet.getString("zip_code"),
-                        resultSet.getString("apt_code"),
-                        resultSet.getInt("vendor_id")
+                        resultSet.getString("apt_code")
                 );
 
                 orders.add(vendor);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
 
-    private static void getVendorEndpoint(){
+    private static void getVendorEndpoint() {
         Gson gson = new Gson();
         get("/vendor/:vendor_id", (req, res) -> {
             String s = req.params(":vendor_id");
@@ -103,19 +121,19 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),
                         resultSet.getString("street"),
                         resultSet.getString("zip_code"),
-                        resultSet.getString("apt_code"),
-                        resultSet.getInt("vendor_id")
+                        resultSet.getString("apt_code")
                 );
 
                 orders.add(vendor);
             }
             return orders;
-        },gson::toJson);
+        }, gson::toJson);
     }
     private static void updateVendorEndpoint(){
         Gson gson = new Gson();
@@ -166,6 +184,5 @@ public class Handler implements RequestStreamHandler {
                 "VALUES ('"+vendor.vendorName+"','"+vendor.city+"','"+vendor.state+"','"+vendor.street+"'," +
                 "'"+vendor.zipCode+"','"+vendor.aptCode+"','"+vendor.vendorId+"');");
     }
-
 
 }
