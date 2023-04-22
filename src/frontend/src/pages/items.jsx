@@ -9,24 +9,6 @@ import Item from './item'
 import AddItem from './add-item'
 
 import axios from "axios";
-function populateItems()
-{
-  var itemList = []
-  const itemNum = 25
-
-  for(let a = 1; a <= itemNum; a++)
-  {
-    itemList.push({
-      name:`Item ${a}`,
-      itemid:a,
-      stock:1000 + a,
-      minStock:10,
-      sellPrice:100
-    })
-  }
-
-  return itemList
-}
 
 function transformResponse(response) {
   return response.data.map( item => {
@@ -58,7 +40,6 @@ function Items(props) {
   const { page, setPage } = useContext(Context)
   const baseUrl = useContext(BaseUrl)
   const [ items, setItems ] = useState([])
-
 
   const getItemsActual = props.getItems === undefined ? getItems : props.getItems
   // populateItems

@@ -147,6 +147,7 @@ public class Handler implements RequestStreamHandler {
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("INSERT INTO item (item_name, sell_price, minimum_stock_level)" +
                 "VALUES ('"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+
     }
 
     private static void updateItemEndpoint() {
