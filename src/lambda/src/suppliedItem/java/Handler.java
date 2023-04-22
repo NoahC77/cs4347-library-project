@@ -196,7 +196,6 @@ public class Handler implements RequestStreamHandler {
         delete("/suppliedItem/:supplied_item_id",(req,res) -> {
             String s = req.params(":supplied_item_id");
             int id = Integer.parseInt(s);
-            SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
             deleteSuppliedItem(id);
             return "Success";
         },gson::toJson);
@@ -222,9 +221,14 @@ public class Handler implements RequestStreamHandler {
 
         if(resultSet.next())
         {
-            statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
-                    "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
-            statement.execute("INSERT INTO supplies (supplied_item_id, vendor_id) VALUES ('"+item.suppliedItemId+"', '"+item.vendorId+"');");
+            statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity)" +
+                    "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"'); ");
+            //ResultSet set = statement.executeQuery("SELECT AUTO_INCREMENT as a FROM information_schema.TABLES WHERE TABLE_SCHEMA = CS4347 AND TABLE_NAME = supplied_item;");
+
+            ResultSet set = statement.executeQuery("SELECT last_insert_id() as a FROM supplied_item;");
+            set.next();
+            int id = set.getInt("a");
+            statement.execute("INSERT INTO supplies (supplied_item_id, vendor_id) VALUES ('"+id+"', '"+item.vendorId+"');");
             return "success";
         }
         else
