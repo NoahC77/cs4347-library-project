@@ -129,8 +129,8 @@ public class Handler implements RequestStreamHandler {
     }
     private static void addItem(Item item) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
-                "VALUES ('"+item.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+        statement.execute("INSERT INTO item ( current_stock, item_name, sell_price, minimum_stock_level)" +
+                "VALUES ('"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
     }
 
     private static void updateItemEndpoint() {
