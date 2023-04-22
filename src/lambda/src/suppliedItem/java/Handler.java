@@ -168,10 +168,16 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static String updateSuppliedItem(SuppliedItem item , int id) throws SQLException {
+        String query = "UPDATE supplied_item" +
+                "SET vendo";
+        PreparedStatement stmnt = TestLambdaHandler.conn.prepareStatement(query);
         Statement statement = TestLambdaHandler.conn.createStatement();
         ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor, item WHERE vendor_id = '"+item.vendorId+"' AND " +
-                "item_id = '"+item.itemId+"';");
+                "item_id = '"+id+"';");
         if(resultSet.next()){
+            stmnt.setInt(1,item.vendorId);
+            stmnt.setInt(2, item.itemId);
+            stmnt.execute();
             statement.execute("UPDATE supplied_item " +
                     "SET vendor_id = '"+item.vendorId+"', " +
                     "item_id = '"+item.itemId+"'," +

@@ -144,16 +144,25 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static void updateVendor(Vendor vendor, int vendor_id) throws SQLException {
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE vendor " +
-                "SET vendor_name = '"+vendor.vendorName+"', " +
-                "city = '"+vendor.city+"'," +
-                "state = '"+vendor.state+"'," +
-                "street = '"+vendor.street+"'," +
-                "zip_code = '"+vendor.zipCode+"'," +
-                "apt_code = '"+vendor.aptCode+"'," +
-                "vendor_id = '"+vendor.vendorId+"'" +
-                " WHERE vendor_id = '"+vendor_id+"'; ");
+        String query = "UPDATE vendor"+
+                "SET vendor_name = ?," +
+                "city = ?," +
+                "state = ?," +
+                "street = ?," +
+                "zip_code = ?," +
+                "apt_code = ?," +
+                "vendor_id = ?" +
+                "WHERE vendor_id = ?";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        statement.setString(1,vendor.vendorName);
+        statement.setString(2,vendor.city);
+        statement.setString(3,vendor.state);
+        statement.setString(4,vendor.street);
+        statement.setString(5,vendor.zipCode);
+        statement.setString(6,vendor.aptCode);
+        statement.setInt(7,vendor_id);
+        statement.setInt(8,vendor_id);
+        statement.execute();
     }
     private static void deleteVendorEndpoint(){
         Gson gson = new Gson();
@@ -177,10 +186,16 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static void addVendor(Vendor vendor) throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO vendor (vendor_name, city, state, street, zip_code, apt_code, vendor_id)" +
-                "VALUES ('"+vendor.vendorName+"','"+vendor.city+"','"+vendor.state+"','"+vendor.street+"'," +
-                "'"+vendor.zipCode+"','"+vendor.aptCode+"','"+vendor.vendorId+"');");
+        String query = "INSERT INTO vendor (vendor_name, city, state, street, zip_code, apt_code)"+
+                "VALUES (?,?,?,?,?,?)";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        statement.setString(1,vendor.vendorName);
+        statement.setString(2,vendor.city);
+        statement.setString(3,vendor.state);
+        statement.setString(4,vendor.street);
+        statement.setString(5,vendor.zipCode);
+        statement.setString(6,vendor.aptCode);
+        statement.execute();
     }
 
 }
