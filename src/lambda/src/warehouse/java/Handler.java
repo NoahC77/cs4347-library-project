@@ -163,13 +163,19 @@ public class Handler implements RequestStreamHandler {
         delete("/warehouse/:ware_id", (req, res) -> {
             String s = req.params(":ware_id");
             int ware_id = Integer.parseInt(s);
-            deleteWarehouse(ware_id);
-            return "Success";
+            return deleteWarehouse(ware_id);
         }, gson::toJson);
     }
-    private static void deleteWarehouse(int token) throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("DELETE FROM warehouse WHERE ware_id = '"+token+"'; ");
+    private static String deleteWarehouse(int token) throws SQLException{
+        try{
+            Statement statement = TestLambdaHandler.conn.createStatement();
+            statement.execute("DELETE FROM warehouse WHERE ware_id = '"+token+"'; ");
+            return "Warehouse Deleted";
+        }
+        catch(Exception e){
+         return "Warehouse still has employees!";
+        }
+
     }
     private static void addWarehouseEndpoint(){
         Gson gson = new Gson();
