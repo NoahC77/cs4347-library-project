@@ -153,10 +153,23 @@ public class Handler implements RequestStreamHandler {
             return "Success";
         },gson::toJson);
     }
-    private static void addSuppliedItem(SuppliedItem item)throws SQLException {
+    private static String addSuppliedItem(SuppliedItem item)throws SQLException {
+
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
-                "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor WHERE vendor_id = '"+item.vendorId+"';");
+
+        if(resultSet.next())
+        {
+            statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
+                    "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
+            return "success";
+        }
+        else
+        {
+            return "No stock available, or invalid item_id / item_name";
+        }
+
+
     }
 
 

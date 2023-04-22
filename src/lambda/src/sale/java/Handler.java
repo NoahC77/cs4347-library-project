@@ -5,6 +5,7 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import spark.Spark;
 
@@ -42,20 +43,27 @@ public class Handler implements RequestStreamHandler {
     @AllArgsConstructor
     public static class Sales {
         //These fields are the fields that are present on the item table
+        @SerializedName("item_id")
         public int itemId;
+        @SerializedName("item_name")
         public String itemName;
+        @SerializedName("sale_id")
         public int saleId;
+        @SerializedName("date_sold")
         public Date dateSold;
     }
 
     public static class Sell {
         //These fields are the fields that are present on the item table
+        @SerializedName("item_id")
         public int itemId;
+        @SerializedName("item_name")
         public String itemName;
+        @SerializedName("sale_id")
         public int saleId;
+        @SerializedName("date_sold")
         public String dateSold;
     }
-
     private static void defineEndpoints() {
         listSalesEndpoint();
         makeSaleEndpoint();
@@ -95,13 +103,18 @@ public class Handler implements RequestStreamHandler {
 
         Statement statement = TestLambdaHandler.conn.createStatement();
         ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+s.itemId+"' AND item_name = '"+s.itemName+"' AND current_stock >= 1;");
-        String check = "we out";
+
         if(resultSet.next())
         {
             statement.execute("INSERT INTO sales_record (item_id, item_name, sale_id, date_sold) "
                         + "VALUES ('"+s.itemId+"','"+s.itemName+"','"+s.saleId+"','"+d+"');");
             statement.execute("UPDATE item SET current_stock = current_stock-1 " +
                        "WHERE item_id = '"+s.itemId+"';");
+            ResultSet resultSet1 = statement.executeQuery("SELECT MIN(ware_id) as min_ware FROM stored_in;");
+            resultSet1.next();
+            int ware_house = resultSet1.getInt("min_ware");
+            statement.execute("UPDATE stored_in SET stock_in_ware = stock_in_ware-1 WHERE item_id = '"+s.itemId+"' " +
+                    "AND ware_id = '"+ware_house+"';");
             return "success";
         }
         else

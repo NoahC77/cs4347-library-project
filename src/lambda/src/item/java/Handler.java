@@ -55,6 +55,24 @@ public class Handler implements RequestStreamHandler {
         public int minimumStockLevel;
     }
 
+    @AllArgsConstructor
+    public static class WareItem {
+        //These fields are the fields that are present on the item table
+        @SerializedName("item_id")
+        public int itemId;
+        @SerializedName("current_stock")
+        public int currentStock;
+        @SerializedName("item_name")
+        public String itemName;
+        @SerializedName("sell_price")
+        public int sellPrice;
+        @SerializedName("minimum_stock_level")
+        public int minimumStockLevel;
+        @SerializedName("ware_id")
+        public int wareId;
+    }
+
+
     private static void defineEndpoints() {
         listItemsEndpoint();
         getItemEndpoint();
@@ -111,15 +129,17 @@ public class Handler implements RequestStreamHandler {
     private static void addItemEndpoint() {
         Gson gson = new Gson();
         post("/addItem", (req, res) -> {
-            Item item = gson.fromJson(req.body(), Item.class);
+            WareItem item = gson.fromJson(req.body(), WareItem.class);
             addItem(item);
             return "Success";
         },gson::toJson);
     }
-    private static void addItem(Item item) throws SQLException{
+    private static void addItem(WareItem item) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
                 "VALUES ('"+item.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+        statement.execute("INSERT INTO stored_in (item_id, ware_id, stock_in_ware)" +
+                "VALUES ('"+item.itemId+"','"+item.wareId+"','"+item.currentStock+"'); ");
     }
 
     private static void updateItemEndpoint() {
