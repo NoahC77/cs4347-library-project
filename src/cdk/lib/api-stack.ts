@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
-import {Fn, StackProps} from "aws-cdk-lib";
+import {Duration, Fn, StackProps} from "aws-cdk-lib";
 import {Construct} from "constructs";
-import {HttpApi, HttpMethod} from "@aws-cdk/aws-apigatewayv2-alpha";
+import {CorsHttpMethod, HttpApi, HttpMethod} from "@aws-cdk/aws-apigatewayv2-alpha";
 import {HttpLambdaIntegration, HttpUrlIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import {Function} from "aws-cdk-lib/aws-lambda";
 import {globSync} from "glob";
@@ -156,7 +156,7 @@ export class ApiStack extends cdk.Stack {
 
         const cfIntegration = new HttpUrlIntegration("CfURLIntegration", "https://d1ldvqy0co6rs2.cloudfront.net/")
         const httpAPI = new HttpApi(this, "Api", {
-            defaultIntegration: cfIntegration,
+            defaultIntegration: cfIntegration
         });
 
         httpAPI.addRoutes({
@@ -164,27 +164,6 @@ export class ApiStack extends cdk.Stack {
             methods: [HttpMethod.GET],
             integration: cfIntegration
         })
-
-
-        const files = globSync("../frontend/build/**/*");
-        const staticEndpoints = files
-            .map(value => Path.relative("../frontend/build/", value))
-            .map(path => Path.parse(path))
-            .map(path => {
-                path.dir = toPosix(path.dir);
-                return path;
-            })
-            .filter(value => value.ext !== "")
-            .map(value => value.dir + Path.posix.sep + value.base)
-            .map(value => {
-                if (!value.startsWith("/")) {
-                    return `/${value}`
-                }
-                return value
-            });
-
-        console.log(staticEndpoints)
-
 
         const categories = Object.keys(LambdaCategory)
             .map(key => LambdaCategory[key as keyof typeof LambdaCategory])

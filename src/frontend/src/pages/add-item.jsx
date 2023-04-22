@@ -18,7 +18,6 @@ function AddItem(props) {
 
   async function addItem(item){
     try{
-      console.log(item)
       const result = await axios.post(baseUrl+ "/addItem",item)
       toast("Success")
     } catch (e) {

@@ -42,6 +42,7 @@ public class Handler implements RequestStreamHandler {
     }
 
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         loginEndpoint();
         logoutEndpoint();
     }

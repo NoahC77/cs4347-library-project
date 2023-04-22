@@ -59,6 +59,7 @@ public class Handler implements RequestStreamHandler {
         public int errorCode;
     }
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listAccountSettingsEndpoint();
         updateAccountSettingsEndpoint();
     }

@@ -9,6 +9,7 @@ import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import software.amazon.awssdk.services.rds.endpoints.internal.Value;
 import spark.Spark;
+import spark.utils.SparkUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +59,7 @@ public class Handler implements RequestStreamHandler {
     }
 
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listSuppliedItemsEndpoint();
         getSuppliedItemEndpoint();
         updateSuppliedItemEndpoint();
@@ -66,13 +68,48 @@ public class Handler implements RequestStreamHandler {
         searchSuppliedItemEndpoint();
     }
 
+    @AllArgsConstructor
+    private static class SuppliedItemVendorItem {
+        public SuppliedItem suppliedItem;
+        public Item item;
+        public Vendor vendor;
+
+        public static SuppliedItemVendorItem fromResultSet(ResultSet resultSet) throws SQLException {
+            return new SuppliedItemVendorItem(
+                    new SuppliedItem(
+                            resultSet.getInt("vendor_id"),
+                            resultSet.getInt("item_id"),
+                            resultSet.getInt("vendor_price"),
+                            resultSet.getInt("quantity"),
+                            resultSet.getInt("supplied_item_id")
+                    ),
+                    new Item(
+                            resultSet.getInt("item_id"),
+                            resultSet.getInt("current_stock"),
+                            resultSet.getString("item_name"),
+                            resultSet.getInt("sell_price"),
+                            resultSet.getInt("minimum_stock_level")
+                    ),
+                    new Vendor(
+                            resultSet.getInt("vendor_id"),
+                            resultSet.getString("vendor_name"),
+                            resultSet.getString("state"),
+                            resultSet.getString("city"),
+                            resultSet.getString("zip_code"),
+                            resultSet.getString("street"),
+                            resultSet.getString("apt_code")
+                    )
+            );
+        }
+    }
+
     private static void searchSuppliedItemEndpoint() {
         Gson gson = new Gson();
-        put("/suppliedItemSearch", (req, res)-> {
+        put("/suppliedItemSearch", (req, res) -> {
             SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
             String query = "SELECT * FROM supplied_item " +
-                    "LEFT OUTER JOIN item ON supplied_item.item_id = item.item_id " +
-                    "LEFT OUTER JOIN vendor ON supplied_item.vendor_id = vendor.vendor_id " +
+                    "INNER JOIN item ON supplied_item.item_id = item.item_id " +
+                    "INNER JOIN vendor ON supplied_item.vendor_id = vendor.vendor_id " +
                     "WHERE item_name LIKE ? OR vendor_name LIKE ? OR supplied_item.item_id LIKE ? OR supplied_item.vendor_id LIKE ? ;";
             PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
             statement.setString(1, "%" + searchRequest.query + "%");
@@ -81,37 +118,9 @@ public class Handler implements RequestStreamHandler {
             statement.setString(4, "%" + searchRequest.query + "%");
 
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<HashMap<String, Object>> suppliedItems = new ArrayList<>();
+            ArrayList<SuppliedItemVendorItem> suppliedItems = new ArrayList<>();
             while (resultSet.next()) {
-                SuppliedItem suppliedItem = new SuppliedItem(
-                        resultSet.getInt("vendor_id"),
-                        resultSet.getInt("item_id"),
-                        resultSet.getInt("vendor_price"),
-                        resultSet.getInt("quantity"),
-                        resultSet.getInt("supplied_item_id")
-                );
-                Item item = new Item(
-                        resultSet.getInt("item_id"),
-                        resultSet.getInt("current_stock"),
-                        resultSet.getString("item_name"),
-                        resultSet.getInt("sell_price"),
-                        resultSet.getInt("minimum_stock_level")
-                );
-                Vendor vendor = new Vendor(
-                        resultSet.getInt("vendor_id"),
-                        resultSet.getString("vendor_name"),
-                        resultSet.getString("state"),
-                        resultSet.getString("city"),
-                        resultSet.getString("zip_code"),
-                        resultSet.getString("street"),
-                        resultSet.getString("apt_code")
-                );
-
-                HashMap<String,Object> result = new HashMap<>();
-                result.put("suppliedItem", suppliedItem);
-                result.put("item", item);
-                result.put("vendor", vendor);
-                suppliedItems.add(result);
+                suppliedItems.add(SuppliedItemVendorItem.fromResultSet(resultSet));
             }
             return suppliedItems;
         }, gson::toJson);
@@ -121,94 +130,84 @@ public class Handler implements RequestStreamHandler {
         Gson gson = new Gson();
         get("/suppliedItems", (req, res) -> {
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item " +
+                    "INNER JOIN item ON supplied_item.item_id = item.item_id " +
+                    "INNER JOIN vendor ON supplied_item.vendor_id = vendor.vendor_id ");
 
-            ArrayList<SuppliedItem> orders = new ArrayList<>();
+            ArrayList<SuppliedItemVendorItem> orders = new ArrayList<>();
             while (resultSet.next()) {
-                SuppliedItem item = new SuppliedItem(
-                        resultSet.getInt("vendor_id"),
-                        resultSet.getInt("item_id"),
-                        resultSet.getInt("vendor_price"),
-                        resultSet.getInt("quantity"),
-                        resultSet.getInt("supplied_item_id")
-                );
-
-                orders.add(item);
+                orders.add(SuppliedItemVendorItem.fromResultSet(resultSet));
             }
             return orders;
         }, gson::toJson);
     }
 
-    private static void getSuppliedItemEndpoint(){
+    private static void getSuppliedItemEndpoint() {
         Gson gson = new Gson();
         get("/suppliedItem/:supplied_item_id", (req, res) -> {
             String s = req.params(":supplied_item_id");
             int supplied_item_id = Integer.parseInt(s);
             Statement statement = TestLambdaHandler.conn.createStatement();
 
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item WHERE supplied_item_id = '"+supplied_item_id+"' ;");
-            ArrayList<SuppliedItem> orders = new ArrayList<>();
-            while (resultSet.next()) {
-                SuppliedItem item = new SuppliedItem(
-                        resultSet.getInt("vendor_id"),
-                        resultSet.getInt("item_id"),
-                        resultSet.getInt("vendor_price"),
-                        resultSet.getInt("quantity"),
-                        resultSet.getInt("supplied_item_id")
-                );
-                orders.add(item);
-            }
-            return orders;
-        },gson::toJson);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM supplied_item " +
+                    "INNER JOIN item ON supplied_item.item_id = item.item_id " +
+                    "INNER JOIN vendor ON supplied_item.vendor_id = vendor.vendor_id " +
+                    "WHERE supplied_item_id = '" + supplied_item_id + "' ;");
+            resultSet.next();
+            return SuppliedItemVendorItem.fromResultSet(resultSet);
+        }, gson::toJson);
     }
 
-    private static void updateSuppliedItemEndpoint(){
+    private static void updateSuppliedItemEndpoint() {
         Gson gson = new Gson();
-        put("/suppliedItem/:supplied_item_id",(req,res) -> {
+        put("/suppliedItem/:supplied_item_id", (req, res) -> {
             String s = req.params(":supplied_item_id");
             int id = Integer.parseInt(s);
             SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
-            updateSuppliedItem(item,id);
+            updateSuppliedItem(item, id);
             return "Success";
-        },gson::toJson);
-    }
-    private static void updateSuppliedItem(SuppliedItem item , int id) throws SQLException {
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE supplied_item " +
-                "SET vendor_id = '"+item.vendorId+"', " +
-                "item_id = '"+item.itemId+"'," +
-                "vendor_price = '"+item.vendorPrice+"'," +
-                "quantity = '"+item.quantity+"'," +
-                "supplied_item_id = '"+id+"'" +
-                " WHERE supplied_item_id = '"+id+"'; ");
+        }, gson::toJson);
     }
 
-    private static void deleteSuppliedItemEndpoint(){
+    private static void updateSuppliedItem(SuppliedItem item, int id) throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("UPDATE supplied_item " +
+                "SET vendor_id = '" + item.vendorId + "', " +
+                "item_id = '" + item.itemId + "'," +
+                "vendor_price = '" + item.vendorPrice + "'," +
+                "quantity = '" + item.quantity + "'," +
+                "supplied_item_id = '" + id + "'" +
+                " WHERE supplied_item_id = '" + id + "'; ");
+    }
+
+    private static void deleteSuppliedItemEndpoint() {
         Gson gson = new Gson();
-        delete("/suppliedItem/:supplied_item_id",(req,res) -> {
+        delete("/suppliedItem/:supplied_item_id", (req, res) -> {
             String s = req.params(":supplied_item_id");
             int id = Integer.parseInt(s);
             deleteSuppliedItem(id);
             return "Success";
-        },gson::toJson);
-    }
-    private static void deleteSuppliedItem(int id) throws SQLException {
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("DELETE FROM supplied_item WHERE supplied_item_id = '"+id+"'; ");
+        }, gson::toJson);
     }
 
-    private static void addSuppliedItemEndpoint(){
+    private static void deleteSuppliedItem(int id) throws SQLException {
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("DELETE FROM supplied_item WHERE supplied_item_id = '" + id + "'; ");
+    }
+
+    private static void addSuppliedItemEndpoint() {
         Gson gson = new Gson();
         post("/addSuppliedItem", (req, res) -> {
             SuppliedItem item = gson.fromJson(req.body(), SuppliedItem.class);
             addSuppliedItem(item);
             return "Success";
-        },gson::toJson);
+        }, gson::toJson);
     }
-    private static void addSuppliedItem(SuppliedItem item)throws SQLException {
+
+    private static void addSuppliedItem(SuppliedItem item) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity, supplied_item_id)" +
-                "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"', '"+item.suppliedItemId+"'); ");
+        statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity)" +
+                "VALUES ('" + item.itemId + "','" + item.vendorId + "','" + item.vendorPrice + "','" + item.quantity + "'); ");
     }
 
 
