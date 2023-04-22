@@ -5,6 +5,7 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import spark.Spark;
 
 import java.io.IOException;
@@ -32,6 +33,21 @@ public class Handler implements RequestStreamHandler {
             throw new RuntimeException("Could not initialize Spark container", e);
         }
     }
+    public static class WareItem{
+            //These fields are the fields that are present on the item table
+            @SerializedName("item_id")
+            public int itemId;
+            @SerializedName("current_stock")
+            public int currentStock;
+            @SerializedName("item_name")
+            public String itemName;
+            @SerializedName("sell_price")
+            public int sellPrice;
+            @SerializedName("minimum_stock_level")
+            public int minimumStockLevel;
+            @SerializedName("ware_id")
+            public int wareId;
+        }
 
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
@@ -122,15 +138,16 @@ public class Handler implements RequestStreamHandler {
     private static void addItemEndpoint() {
         Gson gson = new Gson();
         post("/addItem", (req, res) -> {
-            Item item = gson.fromJson(req.body(), Item.class);
+            WareItem item = gson.fromJson(req.body(), WareItem.class);
             addItem(item);
             return "Success";
         },gson::toJson);
     }
-    private static void addItem(Item item) throws SQLException{
+    private static void addItem(WareItem item) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO item ( current_stock, item_name, sell_price, minimum_stock_level)" +
-                "VALUES ('"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+        statement.execute("INSERT INTO item (item_name, sell_price, minimum_stock_level)" +
+                "VALUES ('"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+
     }
 
     private static void updateItemEndpoint() {

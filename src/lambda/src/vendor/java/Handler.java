@@ -81,9 +81,6 @@ public class Handler implements RequestStreamHandler {
             }
             return vendors;
         }, gson::toJson);
-        
-        addVendorEndpoint();
-        searchVendorEndpoint();
     }
 
     private static void listVendorsEndpoint() {
