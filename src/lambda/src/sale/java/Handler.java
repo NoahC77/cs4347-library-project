@@ -12,12 +12,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
+import java.sql.Date;
 
-import static spark.Spark.get;
-import static spark.Spark.redirect;
+import static spark.Spark.*;
 
 public class Handler implements RequestStreamHandler {
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
@@ -42,14 +42,23 @@ public class Handler implements RequestStreamHandler {
     @AllArgsConstructor
     public static class Sales {
         //These fields are the fields that are present on the item table
-        public String itemId;
+        public int itemId;
         public String itemName;
-        public String saleName;
+        public int saleId;
         public Date dateSold;
+    }
+
+    public static class Sell {
+        //These fields are the fields that are present on the item table
+        public int itemId;
+        public String itemName;
+        public int saleId;
+        public String dateSold;
     }
 
     private static void defineEndpoints() {
         listSalesEndpoint();
+        makeSaleEndpoint();
     }
 
     private static void listSalesEndpoint(){
@@ -61,9 +70,9 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Sales> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Sales sale = new Sales(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getString("item_name"),
-                        resultSet.getString("sale_id"),
+                        resultSet.getInt("sale_id"),
                         resultSet.getDate("date_sold")
                 );
 
@@ -71,5 +80,33 @@ public class Handler implements RequestStreamHandler {
             }
             return orders;
         },gson::toJson);
+    }
+
+    private static void makeSaleEndpoint(){
+        Gson gson = new Gson();
+        post("/makeSale", (req, res) -> {
+            Sell sale = gson.fromJson(req.body(),Sell.class);
+            Date date = Date.valueOf(sale.dateSold);
+            return makeSale(sale,date);
+        },gson::toJson);
+    }
+
+    private static String makeSale(Sell s,Date d) throws SQLException{
+
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+s.itemId+"' AND item_name = '"+s.itemName+"' AND current_stock >= 1;");
+        String check = "we out";
+        if(resultSet.next())
+        {
+            statement.execute("INSERT INTO sales_record (item_id, item_name, sale_id, date_sold) "
+                        + "VALUES ('"+s.itemId+"','"+s.itemName+"','"+s.saleId+"','"+d+"');");
+            statement.execute("UPDATE item SET current_stock = current_stock-1 " +
+                       "WHERE item_id = '"+s.itemId+"';");
+            return "success";
+        }
+        else
+        {
+            return "No stock available, or invalid item_id / item_name";
+        }
     }
 }
