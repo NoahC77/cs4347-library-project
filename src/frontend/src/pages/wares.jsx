@@ -57,16 +57,6 @@ function Wares() {
           />)}
         /> 
       )}
-
-      <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
-        Page {1} of {10} 
-        <div className="
-          h-[5vh] w-[5vw] bg-[#2288BB] rounded-[5px]
-          text-white text-[4vh] leading-none text-center [cursor:pointer]
-        ">
-          {'>'}
-        </div>
-      </div>
     </>
   );
 }
