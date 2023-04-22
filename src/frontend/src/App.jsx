@@ -29,6 +29,8 @@ import { useState, createContext } from 'react'
 
 export const Context = createContext()
 
+export const BaseUrl = createContext(window.location.href.includes("localhost") ? "https://szyzznq8r8.execute-api.us-east-2.amazonaws.com" : "")
+
 function App()
 {
   const [page, setPage] = useState(<Menu/>)
@@ -55,10 +57,9 @@ function App()
             Login
           </span>
         </div>
-
-        <Context.Provider value={{page, setPage}}>
-          {page}
-        </Context.Provider>
+          <Context.Provider value={{page, setPage}}>
+            {page}
+          </Context.Provider>
       </main>
     </>
   )

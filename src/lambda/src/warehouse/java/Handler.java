@@ -77,7 +77,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Warehouse> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Warehouse warehouse = new Warehouse(
-                        resultSet.getString("ware_id"),
+                        resultSet.getInt("ware_id"),
                         resultSet.getInt("sqft"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),

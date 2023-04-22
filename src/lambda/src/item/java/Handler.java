@@ -5,8 +5,6 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
 import spark.Spark;
 
 import java.io.IOException;
@@ -40,22 +38,8 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    @AllArgsConstructor
-    public static class Item {
-        //These fields are the fields that are present on the item table
-        @SerializedName("item_id")
-        public int itemId;
-        @SerializedName("current_stock")
-        public int currentStock;
-        @SerializedName("item_name")
-        public String itemName;
-        @SerializedName("sell_price")
-        public int sellPrice;
-        @SerializedName("minimum_stock_level")
-        public int minimumStockLevel;
-    }
-
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listItemsEndpoint();
         getItemEndpoint();
         addItemEndpoint();
@@ -76,7 +60,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Item> items = new ArrayList<>();
             while (resultSet.next()) {
                 Item item = new Item(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("sell_price"),
@@ -92,6 +76,7 @@ public class Handler implements RequestStreamHandler {
     private static void listItemsEndpoint() {
         Gson gson = new Gson();
         get("/items", (req, res) -> {
+            res.header("Access-Control-Allow-Origin", "*" );
             Statement statement = TestLambdaHandler.conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM item;");
 

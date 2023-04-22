@@ -5,7 +5,6 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
-import lombok.AllArgsConstructor;
 import spark.Spark;
 
 import java.io.IOException;
@@ -15,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static spark.Spark.*;
 
@@ -39,17 +37,6 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    @AllArgsConstructor
-    public static class Vendor {
-        //These fields are the fields that are present on the item table
-        public String vendorName;
-        public String state;
-        public String city;
-        public String zipCode;
-        public String street;
-        public String aptNum;
-    }
-
     private static void defineEndpoints() {
         listVendorsEndpoint();
         getVendorEndpoint();
@@ -68,7 +55,7 @@ public class Handler implements RequestStreamHandler {
             statement.setString(3, vendor.city);
             statement.setString(4, vendor.zipCode);
             statement.setString(5, vendor.street);
-            statement.setString(6, vendor.aptNum);
+            statement.setString(6, vendor.aptCode);
 
             statement.executeUpdate();
             return "Vendor added";
@@ -93,6 +80,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> vendors = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("state"),
                         resultSet.getString("city"),
@@ -116,6 +104,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),
@@ -141,6 +130,7 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),

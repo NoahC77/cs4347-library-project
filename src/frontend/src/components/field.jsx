@@ -10,7 +10,7 @@ function Field(props) {
             {props.text1}
           </div>
           {props.editable ?
-            <input placeholder={props.text2} className="
+            <input value={props.text2} onInput={(e)=>props.onValueChange(e.target.value)} className="
               h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%]
               placeholder:text-[#999999] text-[3vh]
             "/>
