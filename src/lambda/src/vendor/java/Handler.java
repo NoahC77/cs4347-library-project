@@ -103,13 +103,13 @@ public class Handler implements RequestStreamHandler {
             ArrayList<Vendor> vendors = new ArrayList<>();
             while (resultSet.next()) {
                 Vendor vendor = new Vendor(
+                        resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
                         resultSet.getString("state"),
                         resultSet.getString("city"),
                         resultSet.getString("zip_code"),
                         resultSet.getString("street"),
-                        resultSet.getString("apt_code"),
-                        resultSet.getInt("vendor_id")
+                        resultSet.getString("apt_code")
                 );
 
                 vendors.add(vendor);
