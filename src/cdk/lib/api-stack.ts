@@ -35,7 +35,7 @@ const endpoints: Endpoint[] = [
     }, {
         lambda: LambdaCategory.item,
         path: "/itemSearch",
-        methods: [HttpMethod.POST]
+        methods: [HttpMethod.PUT]
     }, {
         //done
         lambda: LambdaCategory.item,
@@ -107,6 +107,10 @@ const endpoints: Endpoint[] = [
         lambda: LambdaCategory.suppliedItem,
         path: "/suppliedItemSearch",
         methods: [HttpMethod.PUT]
+    },{
+        lambda: LambdaCategory.suppliedItem,
+        path: "/suppliedItem/{supplied_item_id}",
+        methods: [HttpMethod.GET, HttpMethod.PUT, HttpMethod.DELETE]
     }, {
         lambda: LambdaCategory.suppliedItem,
         path: "/addSuppliedItem",
@@ -123,14 +127,26 @@ const endpoints: Endpoint[] = [
         lambda: LambdaCategory.purchaseOrder,
         path: "/addPurchaseOrder",
         methods: [HttpMethod.POST]
-    },{
+    }, {
         lambda: LambdaCategory.login,
         path: "/login",
         methods: [HttpMethod.POST]
-    },{
+    }, {
         lambda: LambdaCategory.login,
         path: "/logout",
         methods: [HttpMethod.POST]
+    }, {
+        lambda: LambdaCategory.optimizer,
+        path: "/lowstock",
+        methods: [HttpMethod.GET]
+    }, {
+        lambda: LambdaCategory.optimizer,
+        path: "/autopurchaseorder",
+        methods: [HttpMethod.PUT]
+    },{
+        lambda: LambdaCategory.optimizer,
+        path: "/auto-cycle-po",
+        methods: [HttpMethod.PUT]
     },
 ];
 
@@ -140,7 +156,7 @@ export class ApiStack extends cdk.Stack {
 
         const cfIntegration = new HttpUrlIntegration("CfURLIntegration", "https://d1ldvqy0co6rs2.cloudfront.net/")
         const httpAPI = new HttpApi(this, "Api", {
-            defaultIntegration: cfIntegration
+            defaultIntegration: cfIntegration,
         });
 
         httpAPI.addRoutes({
@@ -186,7 +202,7 @@ export class ApiStack extends cdk.Stack {
         endpoints.forEach(value =>
             httpAPI.addRoutes({
                 path: value.path,
-                methods: value.methods,
+                methods: [...value.methods, HttpMethod.OPTIONS],
                 integration: integrations[value.lambda]
             })
         )

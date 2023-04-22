@@ -5,18 +5,16 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
 import spark.Spark;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static spark.Spark.*;
 
@@ -40,50 +38,45 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    @AllArgsConstructor
-    public static class Item {
-        //These fields are the fields that are present on the item table
-        @SerializedName("item_id")
-        public int itemId;
-        @SerializedName("current_stock")
-        public int currentStock;
-        @SerializedName("item_name")
-        public String itemName;
-        @SerializedName("sell_price")
-        public int sellPrice;
-        @SerializedName("minimum_stock_level")
-        public int minimumStockLevel;
-    }
-
-    @AllArgsConstructor
-    public static class WareItem {
-        //These fields are the fields that are present on the item table
-        @SerializedName("item_id")
-        public int itemId;
-        @SerializedName("current_stock")
-        public int currentStock;
-        @SerializedName("item_name")
-        public String itemName;
-        @SerializedName("sell_price")
-        public int sellPrice;
-        @SerializedName("minimum_stock_level")
-        public int minimumStockLevel;
-        @SerializedName("ware_id")
-        public int wareId;
-    }
-
-
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listItemsEndpoint();
         getItemEndpoint();
         addItemEndpoint();
         updateItemEndpoint();
         deleteItemEndpoint();
+        searchItemEndpoint();
+    }
+
+    private static void searchItemEndpoint() {
+        Gson gson = new Gson();
+        put("/itemSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM item WHERE item_name LIKE ? ;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%"+ searchRequest.query+"%");
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Item> items = new ArrayList<>();
+            while (resultSet.next()) {
+                Item item = new Item(
+                        resultSet.getInt("item_id"),
+                        resultSet.getInt("current_stock"),
+                        resultSet.getString("item_name"),
+                        resultSet.getInt("sell_price"),
+                        resultSet.getInt("minimum_stock_level")
+                );
+
+                items.add(item);
+            }
+            return items;
+        }, gson::toJson);
     }
 
     private static void listItemsEndpoint() {
         Gson gson = new Gson();
         get("/items", (req, res) -> {
+            res.header("Access-Control-Allow-Origin", "*" );
             Statement statement = TestLambdaHandler.conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM item;");
 
@@ -129,17 +122,15 @@ public class Handler implements RequestStreamHandler {
     private static void addItemEndpoint() {
         Gson gson = new Gson();
         post("/addItem", (req, res) -> {
-            WareItem item = gson.fromJson(req.body(), WareItem.class);
+            Item item = gson.fromJson(req.body(), Item.class);
             addItem(item);
             return "Success";
         },gson::toJson);
     }
-    private static void addItem(WareItem item) throws SQLException{
+    private static void addItem(Item item) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
                 "VALUES ('"+item.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
-        statement.execute("INSERT INTO stored_in (item_id, ware_id, stock_in_ware)" +
-                "VALUES ('"+item.itemId+"','"+item.wareId+"','"+item.currentStock+"'); ");
     }
 
     private static void updateItemEndpoint() {
