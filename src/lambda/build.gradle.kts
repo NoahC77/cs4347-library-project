@@ -159,3 +159,5 @@ buildscript {
         classpath("com.beust:klaxon:5.5")
     }
 }
+java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11

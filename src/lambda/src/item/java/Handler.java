@@ -5,20 +5,18 @@ import com.amazonaws.serverless.proxy.spark.SparkLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
 import spark.Spark;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 
-import static spark.Spark.get;
-import static spark.Spark.redirect;
+import static spark.Spark.*;
 
 public class Handler implements RequestStreamHandler {
     private static SparkLambdaContainerHandler<HttpApiV2ProxyRequest, AwsProxyResponse> proxyHandler;
@@ -40,36 +38,52 @@ public class Handler implements RequestStreamHandler {
         proxyHandler.proxyStream(input, output, context);
     }
 
-    @AllArgsConstructor
-    public static class Item {
-        //These fields are the fields that are present on the item table
-        @SerializedName("item_id")
-        public String itemId;
-        @SerializedName("current_stock")
-        public int currentStock;
-        @SerializedName("item_name")
-        public String itemName;
-        @SerializedName("sell_price")
-        public int sellPrice;
-        @SerializedName("minimum_stock_level")
-        public int minimumStockLevel;
-    }
-
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listItemsEndpoint();
         getItemEndpoint();
+        addItemEndpoint();
+        updateItemEndpoint();
+        deleteItemEndpoint();
+        searchItemEndpoint();
+    }
+
+    private static void searchItemEndpoint() {
+        Gson gson = new Gson();
+        put("/itemSearch", (req, res) -> {
+            SearchRequest searchRequest = gson.fromJson(req.body(), SearchRequest.class);
+            String query = "SELECT * FROM item WHERE item_name LIKE ? ;";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setString(1, "%"+ searchRequest.query+"%");
+            ResultSet resultSet = statement.executeQuery();
+
+            ArrayList<Item> items = new ArrayList<>();
+            while (resultSet.next()) {
+                Item item = new Item(
+                        resultSet.getInt("item_id"),
+                        resultSet.getInt("current_stock"),
+                        resultSet.getString("item_name"),
+                        resultSet.getInt("sell_price"),
+                        resultSet.getInt("minimum_stock_level")
+                );
+
+                items.add(item);
+            }
+            return items;
+        }, gson::toJson);
     }
 
     private static void listItemsEndpoint() {
         Gson gson = new Gson();
         get("/items", (req, res) -> {
+            res.header("Access-Control-Allow-Origin", "*" );
             Statement statement = TestLambdaHandler.conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM item;");
 
             ArrayList<Item> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Item item = new Item(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("sell_price"),
@@ -85,14 +99,15 @@ public class Handler implements RequestStreamHandler {
     private static void getItemEndpoint(){
         Gson gson = new Gson();
         get("/item/:item_id", (req, res) -> {
-            String item_id = req.params(":item_id");
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
             Statement statement = TestLambdaHandler.conn.createStatement();
 
             ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+item_id+"';");
             ArrayList<Item> orders = new ArrayList<>();
             while (resultSet.next()) {
                 Item item = new Item(
-                        resultSet.getString("item_id"),
+                        resultSet.getInt("item_id"),
                         resultSet.getInt("current_stock"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("sell_price"),
@@ -102,6 +117,52 @@ public class Handler implements RequestStreamHandler {
             }
             return orders;
         },gson::toJson);
+    }
+
+    private static void addItemEndpoint() {
+        Gson gson = new Gson();
+        post("/addItem", (req, res) -> {
+            Item item = gson.fromJson(req.body(), Item.class);
+            addItem(item);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void addItem(Item item) throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("INSERT INTO item (item_id, current_stock, item_name, sell_price, minimum_stock_level)" +
+                "VALUES ('"+item.itemId+"','"+item.currentStock+"','"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+    }
+
+    private static void updateItemEndpoint() {
+        Gson gson = new Gson();
+        put("/item/:item_id", (req, res) -> {
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
+            Item item = gson.fromJson(req.body(), Item.class);
+            updateItem(item, item_id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void updateItem(Item item, int item_id)throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("UPDATE item " +
+                "SET item_name = '"+item.itemName+"', " +
+                "minimum_stock_level = '"+item.minimumStockLevel+"'," +
+                "sell_Price = '"+item.sellPrice+"'" +
+                " WHERE item_id = '"+item_id+"'; ");
+    }
+    private static void deleteItemEndpoint() {
+        Gson gson = new Gson();
+        delete("/item/:item_id", (req, res) -> {
+            String s = req.params(":item_id");
+            int item_id = Integer.parseInt(s);
+            deleteItem(item_id);
+            return "Success";
+        },gson::toJson);
+    }
+    private static void deleteItem(int item_id)throws SQLException{
+        Statement statement = TestLambdaHandler.conn.createStatement();
+        statement.execute("DELETE FROM item WHERE item_id = '"+item_id+"'; ");
     }
 
 

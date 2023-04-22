@@ -1,8 +1,8 @@
 import * as cdk from "aws-cdk-lib";
-import {Construct} from "constructs";
 import {CfnOutput, RemovalPolicy, StackProps} from "aws-cdk-lib";
+import {Construct} from "constructs";
 import {AllowedMethods, Distribution, OriginAccessIdentity, ViewerProtocolPolicy} from "aws-cdk-lib/aws-cloudfront";
-import {BlockPublicAccess, Bucket} from "aws-cdk-lib/aws-s3";
+import {BlockPublicAccess, Bucket, HttpMethods} from "aws-cdk-lib/aws-s3";
 import {CanonicalUserPrincipal, PolicyStatement} from "aws-cdk-lib/aws-iam";
 import {S3Origin} from "aws-cdk-lib/aws-cloudfront-origins";
 import {BucketDeployment, Source} from "aws-cdk-lib/aws-s3-deployment";
@@ -40,6 +40,7 @@ export class FrontendStack extends cdk.Stack {
                 viewerProtocolPolicy: ViewerProtocolPolicy.ALLOW_ALL
             }
         });
+
 
 
         new BucketDeployment(this, "BucketDeployment", {

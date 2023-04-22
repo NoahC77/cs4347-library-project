@@ -1,5 +1,5 @@
 import {useState, useContext, useEffect} from 'react'
-import { Context } from '../App'
+import {BaseUrl, Context} from '../App'
 
 import Option from '../components/option'
 import Search from '../components/search'
@@ -28,9 +28,7 @@ function populateItems()
   return itemList
 }
 
-async function getItems() {
-  const response = await axios.get("/items");
-
+function transformResponse(response) {
   return response.data.map( item => {
     return {
       name:item.item_name,
@@ -42,23 +40,42 @@ async function getItems() {
   });
 }
 
+async function getItems(baseUrl) {
+  const response = await axios.get(  baseUrl+"/items");
 
-function Items() {
+  return transformResponse(response)
+}
+
+function getItemsWithQuery(query) {
+  return async (baseUrl) => {
+    const response = await axios.put(baseUrl + "/itemSearch",{ query });
+
+    return transformResponse(response)
+  }
+}
+
+function Items(props) {
   const { page, setPage } = useContext(Context)
+  const baseUrl = useContext(BaseUrl)
   const [ items, setItems ] = useState([])
+
+
+  const getItemsActual = props.getItems === undefined ? getItems : props.getItems
   // populateItems
   useEffect(()=>{
-    getItems().then(response => {
+    console.log(props)
+    getItemsActual(baseUrl).then(response => {
       setItems(response);
     });
   },[]);
+
 
 
   return (
     <>
       <Title>Items</Title>
 
-      <Search onAddClick={() => setPage(<AddItem/>)}/>
+      <Search onSearchClick={(text)=> setPage(<Items key={text} getItems={getItemsWithQuery(text)}/>)} onAddClick={() => setPage(<AddItem/>)}/>
 
       {items.map( (elem,index) =>
         <Option
