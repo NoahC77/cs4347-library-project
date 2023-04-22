@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.sql.Date;
 
@@ -65,6 +66,7 @@ public class Handler implements RequestStreamHandler {
         public String dateSold;
     }
     private static void defineEndpoints() {
+        SparkUtil.corsRoutes();
         listSalesEndpoint();
         makeSaleEndpoint();
     }
@@ -106,8 +108,8 @@ public class Handler implements RequestStreamHandler {
 
         if(resultSet.next())
         {
-            statement.execute("INSERT INTO sales_record (item_id, item_name, sale_id, date_sold) "
-                        + "VALUES ('"+s.itemId+"','"+s.itemName+"','"+s.saleId+"','"+d+"');");
+            statement.execute("INSERT INTO sales_record (item_id, item_name, date_sold) "
+                        + "SELECT '"+s.itemId+"', item_name ,'"+s.saleId+"','"+d+"'");
             statement.execute("UPDATE item SET current_stock = current_stock-1 " +
                        "WHERE item_id = '"+s.itemId+"';");
             ResultSet resultSet1 = statement.executeQuery("SELECT MIN(ware_id) as min_ware FROM stored_in;");

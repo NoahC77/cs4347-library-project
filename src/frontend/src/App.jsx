@@ -25,14 +25,16 @@ import Sumbit from './components/submit'
 import Title from './components/title'
 import Delete from './components/delete'
 
-import { useState, createContext } from 'react'
+import {useState, createContext} from 'react'
+
+import {ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export const Context = createContext()
 
 export const BaseUrl = createContext(window.location.href.includes("localhost") ? "https://szyzznq8r8.execute-api.us-east-2.amazonaws.com" : "")
 
-function App()
-{
+function App() {
   const [page, setPage] = useState(<Menu/>)
 
   return (
@@ -43,7 +45,7 @@ function App()
             h-[8vh] w-[min(12vh,8vw)] bg-[#2288BB] rounded-[5px] justify-self-start
             flex place-content-center place-items-center [cursor:pointer]"
 
-            onClick={() => setPage(<Menu/>)}
+                onClick={() => setPage(<Menu/>)}
           >
             <img src="/hamburger-icon.svg" className="h-[6vh] w-[6vw] object-contain"/>
           </span>
@@ -52,14 +54,26 @@ function App()
             h-[8vh] w-[min(15vh,10vw)] bg-[#2288BB] rounded-[5px] justify-self-end
             text-white text-[4vh] leading-[8vh] text-center [cursor:pointer]"
 
-            onClick={() => setPage(<Login/>)}
+                onClick={() => setPage(<Login/>)}
           >
             Login
           </span>
         </div>
-          <Context.Provider value={{page, setPage}}>
-            {page}
-          </Context.Provider>
+        <ToastContainer
+          position="top-center"
+          autoClose={2500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+        <Context.Provider value={{page, setPage}}>
+          {page}
+        </Context.Provider>
       </main>
     </>
   )
