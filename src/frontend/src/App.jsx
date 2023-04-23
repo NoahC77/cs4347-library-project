@@ -32,10 +32,16 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export const Context = createContext()
 
+export const Authentication = createContext()
+
 export const BaseUrl = createContext(window.location.href.includes("localhost") ? "https://szyzznq8r8.execute-api.us-east-2.amazonaws.com" : "")
 
-function App() {
-  const [page, setPage] = useState(<Menu/>)
+function App()
+{
+  const [page, setPage] = useState(<Login/>)
+  const [auth, setAuth] = useState(true)
+  const logoutStyle = "bg-[#C83A4A] w-[min(18vh,12vw)]"
+  const loginStyle = "bg-[#2288BB] w-[min(15vh,10vw)]"
 
   return (
     <>
@@ -45,20 +51,26 @@ function App() {
             h-[8vh] w-[min(12vh,8vw)] bg-[#2288BB] rounded-[5px] justify-self-start
             flex place-content-center place-items-center [cursor:pointer]"
 
-                onClick={() => setPage(<Menu/>)}
+            onClick={() => setPage(<Menu/>)}
           >
             <img src="/hamburger-icon.svg" className="h-[6vh] w-[6vw] object-contain"/>
           </span>
 
-          <span className="
-            h-[8vh] w-[min(15vh,10vw)] bg-[#2288BB] rounded-[5px] justify-self-end
-            text-white text-[4vh] leading-[8vh] text-center [cursor:pointer]"
+          <span className={`${auth ? logoutStyle : loginStyle}
+            h-[8vh] rounded-[5px] justify-self-end [cursor:pointer]
+            text-white text-[4vh] leading-[8vh] text-center`}
 
-                onClick={() => setPage(<Login/>)}
+            onClick={() => setPage(<Login/>)}
           >
-            Login
+            {auth ? "Logout" : "Login"}
           </span>
         </div>
+
+          <Context.Provider value={{page, setPage}}>
+            <Authentication.Provider value={{auth, setAuth}}>
+              {page}
+            </Authentication.Provider>
+          </Context.Provider>
         <ToastContainer
           position="top-center"
           autoClose={2500}

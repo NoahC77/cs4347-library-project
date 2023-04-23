@@ -1,5 +1,4 @@
 function Submit(props) {
-
   return (
     <>
       <div className="w-full flex gap-[2%] justify-center">
