@@ -36,16 +36,29 @@ function Items() {
       <Search onAddClick={() => setPage(<AddSuppItem/>)}/>
       
       {suppItems.map( elem => 
-        <Option 
-          text1={elem.itemid}
-          className1="col-span-2 text-center"
-          className2="hidden"
-          onClick={() => setPage(<SuppItem
-            itemid={elem.itemid}
-            vendorPrice={elem.vendorPrice}
-            vendorid={elem.vendorid}
-          />)}
-        /> 
+        <div className="w-full flex justify-center">
+          <div
+            className="
+            h-[5vh] w-[70%] bg-[#2288BB] rounded-[5px] mb-[5vh]
+            border-[2px] border-black
+            text-white text-[3vh] grid grid-cols-3 [cursor:pointer]"
+            onClick={() => setPage(<SuppItem
+              itemid={elem.itemid}
+              vendorPrice={elem.vendorPrice}
+              vendorid={elem.vendorid}
+            />)}
+          >
+            <div className="border-r-[2px] border-black text-center">
+              Vendor: {elem.vendor_name}
+            </div>
+            <div className="text-center">
+              Item: {elem.item_name}
+            </div>
+            <div className="border-l-[2px] border-black text-center">
+              Quantity: {elem.quantity}
+            </div>
+          </div> 
+        </div>
       )}
     </>
   );
