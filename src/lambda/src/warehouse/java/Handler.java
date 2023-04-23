@@ -150,14 +150,20 @@ public class Handler implements RequestStreamHandler {
         }, gson::toJson);
     }
     private static void updateWarehouse(Warehouse w, int token) throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE warehouse " +
-                "SET ware_name = '"+w.ware_name+"', " +
-                "city = '"+w.city+"'," +
-                "state = '"+w.state+"'," +
-                "street = '"+w.street+"'," +
-                "sqft = '"+w.sqft+"'" +
-                "WHERE ware_id = '"+token+"'; ");
+        String query = "UPDATE warehouse SET ware_name = ?, " +
+                                        "city = ?, " +
+                                        "state = ?, " +
+                                        "street = ?, " +
+                                        "sqft = ? " +
+                                        "WHERE ware_id = ?;";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        statement.setString(1,w.ware_name);
+        statement.setString(2,w.city);
+        statement.setString(3,w.state);
+        statement.setString(4,w.street);
+        statement.setInt(5,w.sqft);
+        statement.setInt(6, token);
+        statement.execute();
         }
     private static void deleteWarehouseEndpoint() {
         Gson gson = new Gson();
@@ -182,13 +188,26 @@ public class Handler implements RequestStreamHandler {
         Gson gson = new Gson();
         post("/addWarehouse", (req, res) -> {
             Warehouse warehouse = gson.fromJson(req.body(), Warehouse.class);
-            addWarehouse(warehouse);
-            return "Success";
+            return addWarehouse(warehouse);
         },gson::toJson);
     }
-    private static void addWarehouse(Warehouse w) throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO warehouse (ware_name, street, city, state, sqft)" +
-                "VALUES ('"+w.ware_name+"','"+w.street+"','"+w.city+"','"+w.state+"', '"+w.sqft+"'); ");
+    private static String addWarehouse(Warehouse w) throws SQLException{
+        try{
+            String query = "INSERT INTO warehouse (ware_id, ware_name, street, city, state, sqft) VALUES" +
+                    "(?,?,?,?,?,?);";
+            PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setInt(1,w.ware_id);
+            statement.setString(2,w.ware_name);
+            statement.setString(3,w.street);
+            statement.setString(4,w.city);
+            statement.setString(5,w.state);
+            statement.setInt(6,w.sqft);
+            statement.execute();
+            return "Success";
+        }
+        catch(Exception e){
+            return "Error";
+        }
+
     }
 }
