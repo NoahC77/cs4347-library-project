@@ -64,33 +64,33 @@ function Items(props) {
     <>
       <Title>Supplied Items</Title>
 
-      <Search onSearchClick={(text)=> setPage(<Items key={text} getItems={getItemsWithQuery(text)}/>)} onAddClick={() => setPage(<AddSuppItem/>)}/>
-
-      {suppItems.map(elem =>
-        <Option
-          key={elem.supplied_item_id}
-          text1={`${elem.vendor_name} : ${elem.item_name} : ${elem.quantity}`}
-          className1="col-span-2 text-center"
-          className2="hidden"
-          onClick={() => setPage(<SuppItem
-            supplied_item_id={elem.supplied_item_id}
-            item_id={elem.item_id}
-            vendorPrice={elem.vendorPrice}
-            vendorid={elem.vendorid}
-            quantity={elem.quantity}
-          />)}
-        />
-      )}
-
-      <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
-        Page {1} of {10}
-        <div className="
-          h-[5vh] w-[5vw] bg-[#2288BB] rounded-[5px]
-          text-white text-[4vh] leading-none text-center [cursor:pointer]
-        ">
-          {'>'}
+      <Search onAddClick={() => setPage(<AddSuppItem/>)}/>
+      
+      {suppItems.map( elem => 
+        <div className="w-full flex justify-center">
+          <div
+            className="
+            h-[5vh] w-[70%] bg-[#2288BB] rounded-[5px] mb-[5vh]
+            border-[2px] border-black
+            text-white text-[3vh] grid grid-cols-3 [cursor:pointer]"
+            onClick={() => setPage(<SuppItem
+              itemid={elem.itemid}
+              vendorPrice={elem.vendorPrice}
+              vendorid={elem.vendorid}
+            />)}
+          >
+            <div className="border-r-[2px] border-black text-center">
+              Vendor: {elem.vendor_name}
+            </div>
+            <div className="text-center">
+              Item: {elem.item_name}
+            </div>
+            <div className="border-l-[2px] border-black text-center">
+              Quantity: {elem.quantity}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

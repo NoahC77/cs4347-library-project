@@ -6,24 +6,23 @@ import Title from '../components/title'
 
 import { useState, createContext, useContext } from 'react'
 import { Context } from '../App'
+import {AddPage, FieldType} from "../components/addPage";
 
 function AddVendor(props) {
-  const { page, setPage } = useContext(Context)
-
   return (
-    <>
-      <Title>Add Vendor</Title>
-
-      <Field editable={true} text1="Name:" text2={`${props.name}`}/>
-      <Field editable={true} text1="ID:" text2={`${props.vendorid}`}/>
-      <Field editable={true} text1="State:" text2={`${props.state}`}/>
-      <Field editable={true} text1="City:" text2={`${props.city}`}/>
-      <Field editable={true} text1="Zip Code:" text2={`${props.zip}`}/>
-      <Field editable={true} text1="Street:" text2={`${props.street}`}/>
-      <Field editable={true} text1="Apartment:" text2={`${props.apt}`}/>
-
-      <Submit/>
-    </>
+    <AddPage
+      title="Add Vendor"
+      endpoint="/addVendor"
+      fields={[
+        {key: "vendor_name", label: "Name", type: FieldType.STRING},
+        {key: "city", label: "City", type: FieldType.STRING},
+        {key: "state", label: "State", type: FieldType.STRING},
+        {key: "street", label: "Street", type: FieldType.STRING},
+        {key: "zip_code", label: "Zip Code", type: FieldType.STRING},
+        {key: "apt_code", label: "Apartment", type: FieldType.STRING},
+        {key: "vendor_id", defaultValue:-1, type: FieldType.HIDDEN},
+      ]}
+    />
   );
 }
 
