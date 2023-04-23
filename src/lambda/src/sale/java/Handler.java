@@ -12,12 +12,12 @@ import spark.Spark;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.ArrayList;
-import java.sql.Date;
 
 import static spark.Spark.*;
 
@@ -58,12 +58,6 @@ public class Handler implements RequestStreamHandler {
         //These fields are the fields that are present on the item table
         @SerializedName("item_id")
         public int itemId;
-        @SerializedName("item_name")
-        public String itemName;
-        @SerializedName("sale_id")
-        public int saleId;
-        @SerializedName("date_sold")
-        public String dateSold;
     }
     private static void defineEndpoints() {
         SparkUtil.corsRoutes();
@@ -96,33 +90,51 @@ public class Handler implements RequestStreamHandler {
         Gson gson = new Gson();
         post("/makeSale", (req, res) -> {
             Sell sale = gson.fromJson(req.body(),Sell.class);
-            Date date = Date.valueOf(sale.dateSold);
-            return makeSale(sale,date);
+            LocalDateTime date = LocalDateTime.now();
+            String formatedS = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH).format(date);
+            Date d = Date.valueOf(formatedS);
+            return makeSale(sale,d);
         },gson::toJson);
     }
 
     private static String makeSale(Sell s,Date d) throws SQLException{
-
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM item WHERE item_id = '"+s.itemId+"' AND item_name = '"+s.itemName+"' AND current_stock >= 1;");
+        String query = "SELECT item_name FROM item WHERE item_id = ? AND current_stock >= 1;";
+        PreparedStatement stmnt = TestLambdaHandler.conn.prepareStatement(query);
+        stmnt.setInt(1, s.itemId);
+        ResultSet resultSet = stmnt.executeQuery();
 
         if(resultSet.next())
         {
-            statement.execute("INSERT INTO sales_record (item_id, item_name, date_sold) "
-                        + "VALUES ('"+s.itemId+"','"+s.itemName+"','"+d+"');");
+            String itemName = resultSet.getString("item_name");
+            String query1 = "INSERT INTO sales_record (item_id, item_name, date_sold) VALUES (?, ?, ?)";
+            PreparedStatement stmnt1 = TestLambdaHandler.conn.prepareStatement(query1);
+            stmnt1.setInt(1,s.itemId);
+            stmnt1.setString(2,itemName);
+            stmnt1.setDate(3, d);
+            stmnt1.execute();
 
-            statement.execute("UPDATE item SET current_stock = current_stock-1 " +
-                       "WHERE item_id = '"+s.itemId+"';");
-            ResultSet resultSet1 = statement.executeQuery("SELECT MIN(ware_id) as min_ware FROM stored_in;");
+            String query2 = "UPDATE item SET current_stock = current_stock-1 WHERE item_id = ?";
+            PreparedStatement stmnt2 = TestLambdaHandler.conn.prepareStatement(query2);
+            stmnt2.setInt(1,s.itemId);
+            stmnt2.execute();
+
+            String query3 = "SELECT MIN(ware_id) as min_ware FROM stored_in;";
+            PreparedStatement stmnt3 = TestLambdaHandler.conn.prepareStatement(query3);
+            ResultSet resultSet1 = stmnt3.executeQuery();
+
             resultSet1.next();
             int ware_house = resultSet1.getInt("min_ware");
-            statement.execute("UPDATE stored_in SET stock_in_ware = stock_in_ware-1 WHERE item_id = '"+s.itemId+"' " +
-                    "AND ware_id = '"+ware_house+"';");
+            String query4 = "UPDATE stored_in SET stock_in_ware = stock_in_ware-1 WHERE item_id = ? " +
+            "AND ware_id = ?;";
+            PreparedStatement stmnt4 = TestLambdaHandler.conn.prepareStatement(query4);
+            stmnt4.setInt(1, s.itemId);
+            stmnt4.setInt(2, ware_house);
+            stmnt4.execute();
             return "success";
         }
         else
         {
-            return "No stock available, or invalid item_id / item_name";
+            return "No stock available, or invalid item_id";
         }
     }
 }
