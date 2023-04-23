@@ -83,9 +83,6 @@ function App()
           pauseOnHover
           theme="light"
         />
-        <Context.Provider value={{page, setPage}}>
-          {page}
-        </Context.Provider>
       </main>
     </>
   )
