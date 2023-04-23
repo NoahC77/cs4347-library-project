@@ -168,23 +168,27 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static String updateSuppliedItem(SuppliedItem item , int id) throws SQLException {
-        String query = "UPDATE supplied_item" +
-                "SET vendo";
+        String query = "UPDATE supplied_item " +
+                "SET vendor_id = ?, " +
+                "item_id = ?, " +
+                "vendor_price = ?, " +
+                "quantity = ?, " +
+                "supplied_item_id = ? "+
+                "WHERE supplied_item_id = ?;";
+        String query2 = "SELECT * FROM vendor, item WHERE vendor_id = ? AND item_id = ?";
         PreparedStatement stmnt = TestLambdaHandler.conn.prepareStatement(query);
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor, item WHERE vendor_id = '"+item.vendorId+"' AND " +
-                "item_id = '"+id+"';");
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query2);
+        statement.setInt(1,item.vendorId);
+        statement.setInt(2,item.itemId);
+        ResultSet resultSet = statement.executeQuery();
         if(resultSet.next()){
             stmnt.setInt(1,item.vendorId);
             stmnt.setInt(2, item.itemId);
+            stmnt.setInt(3, item.vendorPrice);
+            stmnt.setInt(4, item.quantity);
+            stmnt.setInt(5, id);
+            stmnt.setInt(6, id);
             stmnt.execute();
-            statement.execute("UPDATE supplied_item " +
-                    "SET vendor_id = '"+item.vendorId+"', " +
-                    "item_id = '"+item.itemId+"'," +
-                    "vendor_price = '"+item.vendorPrice+"'," +
-                    "quantity = '"+item.quantity+"'," +
-                    "supplied_item_id = '"+id+"'" +
-                    " WHERE supplied_item_id = '"+id+"'; ");
             return "Success";
         }
         else{
@@ -218,20 +222,32 @@ public class Handler implements RequestStreamHandler {
     }
     private static String addSuppliedItem(SuppliedItem item)throws SQLException {
     // Adding a suppliedItem checks for the existence of the item and vendor and also adds it to 'supplies'
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor, item WHERE vendor_id = '"+item.vendorId+"' AND " +
-                "item_id = '"+item.itemId+"';");
+        String query = "INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity) VALUES (?,?,?,?);";
+        String query2 = "SELECT * FROM vendor, item WHERE vendor_id = ? AND item_id = ?";
+        String query3 = "INSERT INTO supplies (supplied_item_id, vendor_id) VALUES (?,?);";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        PreparedStatement statement1 = TestLambdaHandler.conn.prepareStatement(query2);
+        PreparedStatement statement2 = TestLambdaHandler.conn.prepareStatement(query3);
+        Statement stmnt = TestLambdaHandler.conn.createStatement();
+        statement.setInt(1,item.itemId);
+        statement.setInt(2, item.vendorId);
+        statement.setInt(3, item.vendorPrice);
+        statement.setInt(4, item.quantity);
+        statement1.setInt(1, item.vendorId);
+        statement1.setInt(2, item.itemId);
 
+        ResultSet resultSet = statement1.executeQuery();
         if(resultSet.next())
         {
-            statement.execute("INSERT INTO supplied_item (item_id, vendor_id, vendor_price, quantity)" +
-                    "VALUES ('"+item.itemId+"','"+item.vendorId+"','"+item.vendorPrice+"','"+item.quantity+"'); ");
+            statement.execute();
             //ResultSet set = statement.executeQuery("SELECT AUTO_INCREMENT as a FROM information_schema.TABLES WHERE TABLE_SCHEMA = CS4347 AND TABLE_NAME = supplied_item;");
 
-            ResultSet set = statement.executeQuery("SELECT last_insert_id() as a FROM supplied_item;");
+            ResultSet set = stmnt.executeQuery("SELECT last_insert_id() as a FROM supplied_item;");
             set.next();
             int id = set.getInt("a");
-            statement.execute("INSERT INTO supplies (supplied_item_id, vendor_id) VALUES ('"+id+"', '"+item.vendorId+"');");
+            statement2.setInt(1,id);
+            statement2.setInt(2,item.vendorId);
+            statement2.execute();
             return "success";
         }
         else
