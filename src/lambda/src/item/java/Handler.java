@@ -144,9 +144,13 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static void addItem(WareItem item) throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO item (item_name, sell_price, minimum_stock_level)" +
-                "VALUES ('"+item.itemName+"','"+item.sellPrice+"','"+item.minimumStockLevel+"'); ");
+        String query = "INSERT INTO item (item_name, sell_price, minimum_stock_level)" +
+                "VALUES (?,?,?;)";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        statement.setString(1,item.itemName);
+        statement.setInt(2, item.sellPrice);
+        statement.setInt(3, item.minimumStockLevel);
+        statement.execute();
 
     }
 
@@ -161,12 +165,16 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static void updateItem(Item item, int item_id)throws SQLException{
-        Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE item " +
-                "SET item_name = '"+item.itemName+"', " +
-                "minimum_stock_level = '"+item.minimumStockLevel+"'," +
-                "sell_Price = '"+item.sellPrice+"'" +
-                " WHERE item_id = '"+item_id+"'; ");
+        String query =  "UPDATE item SET item_name = ?," +
+                        "minimum_stock_level = ?," +
+                        "sell_price = ?," +
+                        "WHERE item_id = ?;";
+        PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
+        statement.setString(1, item.itemName);
+        statement.setInt(2, item.minimumStockLevel);
+        statement.setInt(3, item.sellPrice);
+        statement.setInt(4, item_id);
+        statement.execute();
     }
     private static void deleteItemEndpoint() {
         Gson gson = new Gson();
