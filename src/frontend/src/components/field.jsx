@@ -10,12 +10,12 @@ function Field(props) {
             {props.text1}
           </div>
           {props.editable ?
-            (props.drop ? 
+            (props.drop ?
               <select className="
                 h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%]
-              ">
+              " onChange={(e)=>props.onValueChange(e.target.value)}>
                 {props.options.map((elem) =>
-                  <option value={elem[0]}>
+                  <option key={elem[0]} value={elem[0]}>
                     {elem[1]}
                   </option>
                 )}
