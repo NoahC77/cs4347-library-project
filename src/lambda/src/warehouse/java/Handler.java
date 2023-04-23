@@ -188,7 +188,7 @@ public class Handler implements RequestStreamHandler {
     }
     private static void addWarehouse(Warehouse w) throws SQLException{
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("INSERT INTO warehouse (ware_id, ware_name, street, city, state, sqft)" +
-                "VALUES ('"+w.ware_id+"','"+w.ware_name+"','"+w.street+"','"+w.city+"','"+w.state+"', '"+w.sqft+"'); ");
+        statement.execute("INSERT INTO warehouse (ware_name, street, city, state, sqft)" +
+                "VALUES ('"+w.ware_name+"','"+w.street+"','"+w.city+"','"+w.state+"', '"+w.sqft+"'); ");
     }
 }

@@ -10,11 +10,23 @@ function Field(props) {
             {props.text1}
           </div>
           {props.editable ?
-            <input value={props.text2} onInput={(e)=>props.onValueChange(e.target.value)} className="
-              h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%]
-              placeholder:text-[#999999] text-[3vh]
-            "/>
-          :
+            (props.drop ?
+                <select className="
+                h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%] text-[3vh] [cursor:pointer]"
+                        onChange={(e) => props.onValueChange(e.target.value)}>
+                  {props.options.map((elem) =>
+                    <option key={elem[0]} value={elem[0]} className="text-[3vh]">
+                      {elem[1]}
+                    </option>
+                  )}
+                </select>
+                :
+                <input value={props.text2} onInput={(e) => props.onValueChange(e.target.value)} className="
+                h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%]
+                placeholder:text-[#999999] text-[3vh]
+              "/>
+            )
+            :
             <div className="
               h-[5vh] w-[60%] bg-[#EAEAEA] rounded-[5px] px-[2%]
               text-black text-[3vh] leading-[5vh]

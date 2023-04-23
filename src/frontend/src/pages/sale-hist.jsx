@@ -6,6 +6,7 @@ import Search from '../components/search'
 import Title from '../components/title'
 
 import MakeSale from './make-sale'
+import ListPage from "../components/list-page";
 
 function populateItems()
 {
@@ -34,8 +35,8 @@ function SaleHist() {
       <Title>Sale History</Title>
 
       <Search onAddClick={() => setPage(<MakeSale/>)}/>
-      
-      {items.map( elem => 
+
+      {items.map( elem =>
         <div className="w-full flex gap-[2%] justify-center">
           <div className="
             h-[10vh] w-[70%] bg-[#2288BB] rounded-[5px] mb-[5vh] border-[2px] border-black
@@ -60,18 +61,17 @@ function SaleHist() {
           </div>
         </div>
       )}
-
-      <div className="flex gap-[2vw] place-content-center place-items-center pb-[5vw]">
-        Page {1} of {10} 
-        <div className="
-          h-[5vh] w-[5vw] bg-[#2288BB] rounded-[5px]
-          text-white text-[4vh] leading-none text-center [cursor:pointer]
-        ">
-          {'>'}
-        </div>
-      </div>
     </>
   );
+  /*return (
+    <ListPage
+      title="Sale History"
+      getEndpoint="/salesHistory"
+      searchEndpoint="/salesHistory"
+      addPage={() => setPage(<MakeSale/>)}
+
+    />
+  );*/
 }
 
 export default SaleHist;
