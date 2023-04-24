@@ -53,45 +53,43 @@ public class Handler implements RequestStreamHandler {
         public String street;
         public String apt_code;
     }
+
     @AllArgsConstructor
     private static class UpdateEmployeeResponse {
         public String response;
         public int errorCode;
     }
+
     private static void defineEndpoints() {
         SparkUtil.corsRoutes();
         listAccountSettingsEndpoint();
         updateAccountSettingsEndpoint();
     }
 
-    private static void listAccountSettingsEndpoint(){
+    private static void listAccountSettingsEndpoint() {
         Gson gson = new Gson();
         get("/accountSettings", (req, res) -> {
             String token = req.headers("Authorization");
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM employee WHERE token = '"+token+"' ;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM employee WHERE token = '" + token + "' ;");
 
-            ArrayList<Employee> orders = new ArrayList<>();
-            while (resultSet.next()) {
-                Employee e = new Employee(
-                        resultSet.getString("username"),
-                        resultSet.getString("password"),
-                        resultSet.getString("fname"),
-                        resultSet.getString("lname"),
-                        resultSet.getString("job_title"),
-                        resultSet.getString("state"),
-                        resultSet.getString("city"),
-                        resultSet.getString("zip_code"),
-                        resultSet.getString("street"),
-                        resultSet.getString("apt_code")
-                );
-
-                orders.add(e);
-            }
-            return orders;
-        },gson::toJson);
+            resultSet.next();
+            return new Employee(
+                    resultSet.getString("username"),
+                    resultSet.getString("password"),
+                    resultSet.getString("fname"),
+                    resultSet.getString("lname"),
+                    resultSet.getString("job_title"),
+                    resultSet.getString("state"),
+                    resultSet.getString("city"),
+                    resultSet.getString("zip_code"),
+                    resultSet.getString("street"),
+                    resultSet.getString("apt_code")
+            );
+        }, gson::toJson);
     }
-    private static void updateAccountSettingsEndpoint(){
+
+    private static void updateAccountSettingsEndpoint() {
         Gson gson = new Gson();
         put("/updateAccount", (req, res) -> {
             String token = req.headers("Authorization");
@@ -102,19 +100,20 @@ public class Handler implements RequestStreamHandler {
         }, gson::toJson);
 
     }
+
     private static int updateAccountSettings(Employee e, String t) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-            statement.execute("UPDATE employee " +
-                    "SET username = '"+e.username+"', " +
-                        "password = '"+e.password+"'," +
-                        "fname = '"+e.fname+"'," +
-                        "lname = '"+e.lname+"'," +
-                        "state = '"+e.state+"'," +
-                        "city = '"+e.city+"'," +
-                        "zip_code = '"+e.zip_code+"'," +
-                        "street = '"+e.street+"'," +
-                        "apt_code = '"+e.apt_code+"'" +
-                    " WHERE token = '"+t+"'; ");
+        statement.execute("UPDATE employee " +
+                "SET username = '" + e.username + "', " +
+                "password = '" + e.password + "'," +
+                "fname = '" + e.fname + "'," +
+                "lname = '" + e.lname + "'," +
+                "state = '" + e.state + "'," +
+                "city = '" + e.city + "'," +
+                "zip_code = '" + e.zip_code + "'," +
+                "street = '" + e.street + "'," +
+                "apt_code = '" + e.apt_code + "'" +
+                " WHERE token = '" + t + "'; ");
         return 0;
     }
 
