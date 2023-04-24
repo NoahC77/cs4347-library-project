@@ -83,11 +83,8 @@ public class Handler implements RequestStreamHandler {
 
                 return new LoginResponse(newToken, currentToken != null);
             } else {
-                return new GenericResponse(Collections.emptyList(),
-                        false,
-                        401,
-                        Collections.emptyMap(),
-                        "Invalid username or password");
+                res.status(401);
+                return "Invalid username or password";
             }
         }, gson::toJson);
     }

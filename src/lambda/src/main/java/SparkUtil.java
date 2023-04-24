@@ -9,7 +9,7 @@ public class SparkUtil {
                             .headers("Access-Control-Request-Headers");
                     if (accessControlRequestHeaders != null) {
                         response.header("Access-Control-Allow-Headers",
-                                accessControlRequestHeaders);
+                                "*");
                     }
 
                     String accessControlRequestMethod = request

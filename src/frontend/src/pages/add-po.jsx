@@ -30,14 +30,14 @@ function AddRemove(props) {
 function AddPO(props) {
   const {page, setPage} = useContext(Context)
   const baseUrl = useContext(BaseUrl)
-  const [suppliedItems, setSuppliedItems] = useState([{supplied_item_id: 0, quantity: 0}]);
+  const [suppliedItems, setSuppliedItems] = useState([{supplied_item_id: 1, quantity: 1}]);
 
   async function addPO() {
     console.log(suppliedItems);
     try {
       await axios.post(baseUrl + "/addPurchaseOrder", suppliedItems);
       toast.success("Success")
-    }catch (e) {
+    } catch (e) {
       toast.error("Error")
     }
   }
@@ -50,21 +50,21 @@ function AddPO(props) {
         return (<div key={index}>
           <EndpointField text1={"Supplied Item:"} endpoint={"/suppliedItems"}
                          transform={item => [item.suppliedItem.supplied_item_id, item.item.item_name]}
-                         onValueChange={(newVal) => setSuppliedItems(suppliedItems.map((it, index2) => {
-                           if (index2 === index) {
-                             return {supplied_item_id: parseInt(newVal), quantity: item.quantity}
-                           }
-                         }))}/>
-          <Field editable={true} text1="Quantity:" text2={item.quantity}
-                 onValueChange={(newVal) => setSuppliedItems(suppliedItems.map((it, index2) => {
-                   if (index2 === index) {
-                     return {supplied_item_id: item.supplied_item_id, quantity: parseInt(newVal)}
-                   }
-                 }))}/>
+                         onValueChange={(newVal) => {
+                           const newSuppliedItems = [...suppliedItems];
+                           newSuppliedItems[index].supplied_item_id = newVal;
+                           setSuppliedItems(newSuppliedItems);
+                         }}/>
+          <Field editable={true} text1="Quantity:" text2={item.quantity ?? 1}
+                 onValueChange={(newVal) => {
+                   const newSuppliedItems = [...suppliedItems];
+                   newSuppliedItems[index].quantity = newVal;
+                   setSuppliedItems(newSuppliedItems);
+                 }}/>
         </div>)
       })}
       <AddRemove onAdd={() => {
-        setSuppliedItems([...suppliedItems, {supplied_item_id: 0, quantity: 0}])
+        setSuppliedItems([...suppliedItems, {supplied_item_id: 1, quantity: 1}])
       }} onRemove={() => {
         setSuppliedItems(suppliedItems.slice(0, Math.max(1, suppliedItems.length - 1)))
       }}/>
