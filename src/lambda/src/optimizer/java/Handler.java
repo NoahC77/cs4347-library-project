@@ -94,7 +94,7 @@ public class Handler implements RequestStreamHandler {
 
                 int[] quantities = suppliedItems.stream().mapToInt(suppliedItem -> suppliedItem.quantity).toArray();
                 int[] vendorPrices = suppliedItems.stream().mapToInt(suppliedItem -> suppliedItem.vendorPrice).toArray();
-                String[] vendorIds = suppliedItems.stream().map(suppliedItem -> suppliedItem.vendorId).toArray(String[]::new);
+                int[] vendorIds = suppliedItems.stream().mapToInt(suppliedItem -> suppliedItem.vendorId).toArray();
                 int requestedQuantity = autoPurchaseOrderRequest.quantity;
 
                 int minimumCost = findMinimumCost(quantities, vendorPrices, requestedQuantity);
@@ -102,18 +102,26 @@ public class Handler implements RequestStreamHandler {
 
 
                 List<Pair<SuppliedItem, Integer>> supplied = poItems.stream().map(itemCostQuantity -> Pair.of(suppliedItems.stream().filter(suppliedItem ->
-                                suppliedItem.vendorId.equals(vendorIds[itemCostQuantity.itemIndex]) &&
+                                suppliedItem.vendorId==(vendorIds[itemCostQuantity.itemIndex]) &&
                                         suppliedItem.quantity == itemCostQuantity.baseQuantity)
                         .findFirst().get(), itemCostQuantity.multiplier)).collect(Collectors.toList());
 
 
                 return supplied.stream()
-                        .map(suppliedItem -> new PurchaseOrderRequest(suppliedItem.left().itemId,
+                        .map(suppliedItem -> new PurchaseOrderRequest(
+                                suppliedItem.left().itemId,
+                                suppliedItem.left().suppliedItemId,
                                 suppliedItem.left().quantity,
                                 suppliedItem.left().vendorPrice,
                                 suppliedItem.left().vendorId,
                                 suppliedItem.right()))
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList())
+                        .stream().flatMap(purchaseOrderRequest ->{
+                            PurchaseOrderRequest[] purchaseOrderRequests = new PurchaseOrderRequest[purchaseOrderRequest.count];
+                            Arrays.fill(purchaseOrderRequests, purchaseOrderRequest);
+                            return Arrays.stream(purchaseOrderRequests);
+                        }).map(poReq -> new SuppliedItemQuantityPair(poReq.supplied_item_id, poReq.quantity))
+                        .toArray();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -188,8 +196,9 @@ public class Handler implements RequestStreamHandler {
         List<SuppliedItem> suppliedItems = new ArrayList<>();
         while (resultSet.next()) {
             SuppliedItem suppliedItem = new SuppliedItem(
-                    resultSet.getString("vendor_id"),
-                    resultSet.getString("item_id"),
+                    resultSet.getInt("supplied_item_id"),
+                    resultSet.getInt("vendor_id"),
+                    resultSet.getInt("item_id"),
                     resultSet.getInt("vendor_price"),
                     resultSet.getInt("quantity")
             );
@@ -200,10 +209,12 @@ public class Handler implements RequestStreamHandler {
 
     @AllArgsConstructor
     private static class SuppliedItem {
+        @SerializedName("supplied_item_id")
+        private int suppliedItemId;
         @SerializedName("vendor_id")
-        private String vendorId;
+        private int vendorId;
         @SerializedName("item_id")
-        private String itemId;
+        private int itemId;
         @SerializedName("vendor_price")
         private int vendorPrice;
         @SerializedName("quantity")

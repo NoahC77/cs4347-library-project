@@ -30,7 +30,6 @@ function Wares() {
           state={ware.state}
           city={ware.city}
           street={ware.street}
-          zip={""}
           apt={""}
         />)}
       />}

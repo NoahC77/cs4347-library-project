@@ -96,8 +96,8 @@ public class Handler implements RequestStreamHandler {
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),
-                        resultSet.getString("street"),
                         resultSet.getString("zip_code"),
+                        resultSet.getString("street"),
                         resultSet.getString("apt_code")
                 );
 
@@ -123,8 +123,8 @@ public class Handler implements RequestStreamHandler {
                         resultSet.getString("vendor_name"),
                         resultSet.getString("city"),
                         resultSet.getString("state"),
-                        resultSet.getString("street"),
                         resultSet.getString("zip_code"),
+                        resultSet.getString("street"),
                         resultSet.getString("apt_code")
                 );
 
@@ -144,15 +144,15 @@ public class Handler implements RequestStreamHandler {
         },gson::toJson);
     }
     private static void updateVendor(Vendor vendor, int vendor_id) throws SQLException {
-        String query = "UPDATE vendor"+
-                "SET vendor_name = ?," +
-                "city = ?," +
-                "state = ?," +
-                "street = ?," +
-                "zip_code = ?," +
-                "apt_code = ?," +
-                "vendor_id = ?" +
-                "WHERE vendor_id = ?";
+        String query = "UPDATE vendor "+
+                "SET vendor_name = ?, " +
+                "city = ?, " +
+                "state = ?, " +
+                "street = ?, " +
+                "zip_code = ?, " +
+                "apt_code = ?, " +
+                "vendor_id = ? " +
+                "WHERE vendor_id = ? ";
         PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
         statement.setString(1,vendor.vendorName);
         statement.setString(2,vendor.city);

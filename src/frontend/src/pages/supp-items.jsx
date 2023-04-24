@@ -64,7 +64,7 @@ function Items(props) {
     <>
       <Title>Supplied Items</Title>
 
-      <Search onAddClick={() => setPage(<AddSuppItem/>)}/>
+      <Search onSearchClick={(query)=>setPage(<Items key={query} getItems={getItemsWithQuery(query)}/>)} onAddClick={() => setPage(<AddSuppItem/>)}/>
       
       {suppItems.map( elem => 
         <div className="w-full flex justify-center">
