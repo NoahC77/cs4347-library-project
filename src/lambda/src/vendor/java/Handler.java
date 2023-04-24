@@ -94,8 +94,8 @@ public class Handler implements RequestStreamHandler {
                 Vendor vendor = new Vendor(
                         resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
-                        resultSet.getString("city"),
                         resultSet.getString("state"),
+                        resultSet.getString("city"),
                         resultSet.getString("zip_code"),
                         resultSet.getString("street"),
                         resultSet.getString("apt_code")
@@ -121,8 +121,8 @@ public class Handler implements RequestStreamHandler {
                 Vendor vendor = new Vendor(
                         resultSet.getInt("vendor_id"),
                         resultSet.getString("vendor_name"),
-                        resultSet.getString("city"),
                         resultSet.getString("state"),
+                        resultSet.getString("city"),
                         resultSet.getString("zip_code"),
                         resultSet.getString("street"),
                         resultSet.getString("apt_code")
@@ -150,8 +150,7 @@ public class Handler implements RequestStreamHandler {
                 "state = ?, " +
                 "street = ?, " +
                 "zip_code = ?, " +
-                "apt_code = ?, " +
-                "vendor_id = ? " +
+                "apt_code = ? " +
                 "WHERE vendor_id = ? ";
         PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
         statement.setString(1,vendor.vendorName);
