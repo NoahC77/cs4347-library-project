@@ -37,7 +37,7 @@ function ListPage(props) {
   }
 
   function search(query) {
-    return setPage(<ListPage key={"Search"} {...props} getEntries={getEntriesWithQuery(query)}/>)
+    return setPage(<ListPage key={query} {...props} getEntries={getEntriesWithQuery(query)}/>)
   }
 
   useEffect(() => {

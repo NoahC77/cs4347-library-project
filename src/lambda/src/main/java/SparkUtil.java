@@ -18,6 +18,12 @@ public class SparkUtil {
                         response.header("Access-Control-Allow-Methods",
                                 accessControlRequestMethod);
                     }
+                    String accessControlRequestOrigin = request
+                            .headers("Access-Control-Request-Origin");
+                    if (accessControlRequestMethod != null) {
+                        response.header("Access-Control-Allow-Origin",
+                                accessControlRequestOrigin);
+                    }
 
                     return "OK";
                 });

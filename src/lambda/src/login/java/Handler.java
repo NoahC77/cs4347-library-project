@@ -64,9 +64,9 @@ public class Handler implements RequestStreamHandler {
         Statement statement = TestLambdaHandler.conn.createStatement();
         statement.execute("UPDATE employee SET token = '" + token + "' WHERE username = '" + employeeUsername + "';");
     }
-    private static int setEmployeeTokenNull(String employeeUsername) throws SQLException {
+    private static int setEmployeeTokenNull(String token) throws SQLException {
         Statement statement = TestLambdaHandler.conn.createStatement();
-        statement.execute("UPDATE employee SET token = NULL WHERE username = '" + employeeUsername + "';");
+        statement.execute("UPDATE employee SET token = NULL WHERE token = '" + token + "';");
         return statement.getUpdateCount();
     }
 
@@ -97,22 +97,14 @@ public class Handler implements RequestStreamHandler {
 
     private static void logoutEndpoint() {
         Gson gson = new Gson();
-        post("/logout", (req, res) -> {
-            LogoutRequest login = gson.fromJson(req.body(), LogoutRequest.class);
-            int updateCount = setEmployeeTokenNull(login.username);
+        get("/logout", (req, res) -> {
+            int updateCount = setEmployeeTokenNull(req.headers("Authorization"));
 
             if (updateCount == 1) {
-                return new GenericResponse(Collections.emptyList(),
-                        false,
-                        200,
-                        Collections.emptyMap(),
-                        "{}");
+                return "Success";
             } else {
-                return new GenericResponse(Collections.emptyList(),
-                        false,
-                        401,
-                        Collections.emptyMap(),
-                        "Invalid username");
+                res.status(401);
+                return "Invalid username";
             }
         }, gson::toJson);
     }

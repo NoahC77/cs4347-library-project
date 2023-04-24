@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
+import software.amazon.awssdk.utils.Pair;
 import spark.Spark;
 
 import java.io.IOException;
@@ -14,8 +15,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import static spark.Spark.*;
@@ -52,8 +55,7 @@ public class Handler implements RequestStreamHandler {
     private static class VendorPO {
         private String vendor_name;
         private String po_id;
-        private int quantity;
-        private int price;
+        private int total_price;
         private Date purchase_date;
     }
 
@@ -66,27 +68,32 @@ public class Handler implements RequestStreamHandler {
             statement.setString(1, "%" + searchRequest.query + "%");
             statement.setString(2, "%" + searchRequest.query + "%");
             ResultSet resultSet = statement.executeQuery();
-            ArrayList<PurchaseOrder> orders = new ArrayList<>();
+            ArrayList<VendorPO> orders = new ArrayList<>();
             while (resultSet.next()) {
-                PurchaseOrder vendorPO = new PurchaseOrder(
+                VendorPO order = new VendorPO(
+                        resultSet.getString("vendor_name"),
                         resultSet.getString("po_id"),
+                        resultSet.getInt("total_price"),
                         resultSet.getDate("purchase_date")
                 );
-                orders.add(vendorPO);
+                orders.add(order);
             }
             return gson.toJson(orders);
         });
     }
 
+
     private static void defineGetPurchaseOrders() {
         get("/purchaseOrders", (req, res) -> {
             Gson gson = new Gson();
             Statement statement = TestLambdaHandler.conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM purchase_order;");
-            ArrayList<PurchaseOrder> orders = new ArrayList<>();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM vendor_po;");
+            ArrayList<VendorPO> orders = new ArrayList<>();
             while (resultSet.next()) {
-                PurchaseOrder order = new PurchaseOrder(
+                VendorPO order = new VendorPO(
+                        resultSet.getString("vendor_name"),
                         resultSet.getString("po_id"),
+                        resultSet.getInt("total_price"),
                         resultSet.getDate("purchase_date")
                 );
                 orders.add(order);
@@ -96,18 +103,11 @@ public class Handler implements RequestStreamHandler {
         });
     }
 
-    private static class SuppliedItemQuantityPair {
-        @SerializedName("supplied_item_id")
-        public int suppliedItemId;
-
-        @SerializedName("quantity")
-        public int quantity;
-    }
-
     private static void addPurchaseOrder() {
         Gson gson = new Gson();
         post("/addPurchaseOrder", (req, res) -> {
-            SuppliedItemQuantityPair[] suppliedItemQuantityPairs = gson.fromJson(req.body(), SuppliedItemQuantityPair[].class);
+            PORequest poRequest = gson.fromJson(req.body(), PORequest.class);
+
             String query = "INSERT INTO purchase_order (purchase_date) VALUES (?);";
             PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.setDate(1, new java.sql.Date(new Date().getTime()));
@@ -116,18 +116,16 @@ public class Handler implements RequestStreamHandler {
             resultSet.next();
             int id = resultSet.getInt(1);
 
-            for (SuppliedItemQuantityPair pair: suppliedItemQuantityPairs) {
+            for (SuppliedItemQuantityPair pair : poRequest.suppliedItems) {
                 String query2 = "INSERT INTO item_from (po_id, supplied_item_id) VALUES (?, ?);";
                 statement = TestLambdaHandler.conn.prepareStatement(query2);
-                for (int i = 0; i < pair.quantity; i++) {
-                    statement.clearParameters();
-                    statement.setInt(1, id);
-                    statement.setInt(2, pair.suppliedItemId);
-                    statement.executeUpdate();
-                }
+                statement.setInt(1, id);
+                statement.setInt(2, pair.suppliedItemId);
+                statement.executeUpdate();
+
             }
             ArrayList<Integer> vendorIds = new ArrayList<>();
-            for (SuppliedItemQuantityPair pair: suppliedItemQuantityPairs) {
+            for (SuppliedItemQuantityPair pair : poRequest.suppliedItems) {
                 query = "SELECT vendor_id FROM supplied_item WHERE supplied_item_id = ?;";
                 statement = TestLambdaHandler.conn.prepareStatement(query);
                 statement.setInt(1, pair.suppliedItemId);
@@ -141,15 +139,70 @@ public class Handler implements RequestStreamHandler {
 
             query = "INSERT INTO purchased_from (po_id, vendor_id) VALUES (?, ?);";
             statement = TestLambdaHandler.conn.prepareStatement(query);
-            for (int vendorId: vendorIds) {
+            for (int vendorId : vendorIds) {
                 statement.clearParameters();
                 statement.setInt(1, id);
                 statement.setInt(2, vendorId);
                 statement.executeUpdate();
             }
 
+
+            final String query2 = "SELECT * FROM stored_in WHERE item_id = ? AND ware_id = ?;";
+            final PreparedStatement statement2 = TestLambdaHandler.conn.prepareStatement(query2);
+            Arrays.stream(poRequest.suppliedItems).map(suppliedItemQuantityPair ->
+                    Pair.of(getItemId(suppliedItemQuantityPair.suppliedItemId), suppliedItemQuantityPair.quantity)
+            ).forEach(itemQuantityPair -> {
+                try {
+                    statement2.clearParameters();
+                    statement2.setInt(1, itemQuantityPair.left());
+                    statement2.setInt(2, poRequest.warehouseId);
+                    ResultSet resultSet2 = statement2.executeQuery();
+                    if (resultSet2.next()) {
+                        String query3 = "UPDATE stored_in SET stock_in_ware = stock_in_ware + ? WHERE item_id = ? AND ware_id = ?;";
+                        PreparedStatement statement3 = TestLambdaHandler.conn.prepareStatement(query3);
+                        statement3.setInt(1, itemQuantityPair.right());
+                        statement3.setInt(2, itemQuantityPair.left());
+                        statement3.setInt(3, poRequest.warehouseId);
+                        statement3.executeUpdate();
+                    } else {
+                        String query3 = "INSERT INTO stored_in (item_id, ware_id, stock_in_ware) VALUES (?, ?, ?);";
+                        PreparedStatement statement3 = TestLambdaHandler.conn.prepareStatement(query3);
+                        statement3.setInt(1, itemQuantityPair.left());
+                        statement3.setInt(2, poRequest.warehouseId);
+                        statement3.setInt(3, itemQuantityPair.right());
+                        statement3.executeUpdate();
+                    }
+
+                    String query4 = "UPDATE item SET current_stock = current_stock + ? WHERE item_id = ?;";
+                    PreparedStatement statement4 = TestLambdaHandler.conn.prepareStatement(query4);
+                    statement4.setInt(1, itemQuantityPair.right());
+                    statement4.setInt(2, itemQuantityPair.left());
+                    statement4.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
+            });
+
+
             return "Success";
         });
     }
+
+    public static int getItemId(int suppliedItemId) {
+        String query = "SELECT item_id FROM supplied_item WHERE supplied_item_id = ?;";
+        PreparedStatement statement = null;
+        try {
+            statement = TestLambdaHandler.conn.prepareStatement(query);
+            statement.setInt(1, suppliedItemId);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getInt("item_id");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }
 

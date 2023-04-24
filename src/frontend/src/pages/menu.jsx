@@ -13,6 +13,7 @@ import Wares from './wares'
 import Vendors from './vendors'
 import SaleHist from './sale-hist'
 import AccSettings from './acc-settings'
+import AutoPo from "./auto-po";
 
 function Menu() {
   const { page, setPage } = useContext(Context)
@@ -30,6 +31,7 @@ function Menu() {
       <Option text1="Vendors" className1="text-center col-span-2" onClick={() => setPage(<Vendors/>)}/>
       <Option text1="Sales History" className1="text-center col-span-2" onClick={() => setPage(<SaleHist/>)}/>
       <Option text1="Account Settings" className1="text-center col-span-2" onClick={() => setPage(<AccSettings/>)}/>
+      <Option text1="Auto PO" className1="text-center col-span-2" onClick={() => setPage(<AutoPo/>)}/>
     </>
   );
 }

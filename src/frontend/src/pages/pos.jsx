@@ -20,9 +20,11 @@ function POs() {
         searchEndpoint="/purchaseOrderSearch"
         transform={(po) => <Option
           key={po.po_id}
-          text1={po.po_id}
-          className1="text-center col-span-2"
-          className2="hidden"
+          text1={`${po.vendor_name} on ${po.purchase_date}`}
+          text2={`$${po.total_price}`}
+          className1="text-left "
+          className2="text-right"
+
           onClick={() => setPage(<PO
             orderid={po.po_id}
             date={po.purchase_date}

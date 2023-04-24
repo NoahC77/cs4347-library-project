@@ -26,16 +26,19 @@ function AddRemove(props) {
     </div>
   </div>);
 }
-
+function transformWarehouse(warehouse) {
+  return [warehouse.ware_id, warehouse.ware_name];
+}
 function AddPO(props) {
   const {page, setPage} = useContext(Context)
   const baseUrl = useContext(BaseUrl)
+  const [warehouseId, setWarehouseId] = useState(1);
   const [suppliedItems, setSuppliedItems] = useState([{supplied_item_id: 1, quantity: 1}]);
 
   async function addPO() {
     console.log(suppliedItems);
     try {
-      await axios.post(baseUrl + "/addPurchaseOrder", suppliedItems);
+      await axios.post(baseUrl + "/addPurchaseOrder", {warehouse_id: warehouseId, supplied_items: suppliedItems});
       toast.success("Success")
     } catch (e) {
       toast.error("Error")
@@ -45,11 +48,12 @@ function AddPO(props) {
   return (
     <>
       <Title>Add Purchase Order</Title>
+      <EndpointField text1="Warehouse:" endpoint={"/warehouses"} transform={transformWarehouse} onValueChange={setWarehouseId}/>
 
       {suppliedItems.map((item, index) => {
         return (<div key={index}>
           <EndpointField text1={"Supplied Item:"} endpoint={"/suppliedItems"}
-                         transform={item => [item.suppliedItem.supplied_item_id, item.item.item_name]}
+                         transform={item => [item.suppliedItem.supplied_item_id, `${item.item.item_name} * ${item.suppliedItem.quantity}: $${item.suppliedItem.vendor_price}`]}
                          onValueChange={(newVal) => {
                            const newSuppliedItems = [...suppliedItems];
                            newSuppliedItems[index].supplied_item_id = newVal;
