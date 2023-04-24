@@ -193,15 +193,15 @@ public class Handler implements RequestStreamHandler {
     }
     private static String addWarehouse(Warehouse w) throws SQLException{
         try{
-            String query = "INSERT INTO warehouse (ware_id, ware_name, street, city, state, sqft) VALUES" +
-                    "(?,?,?,?,?,?);";
+            String query = "INSERT INTO warehouse (ware_name, street, city, state, sqft) VALUES" +
+                    "(?,?,?,?,?);";
             PreparedStatement statement = TestLambdaHandler.conn.prepareStatement(query);
-            statement.setInt(1,w.ware_id);
-            statement.setString(2,w.ware_name);
-            statement.setString(3,w.street);
-            statement.setString(4,w.city);
-            statement.setString(5,w.state);
-            statement.setInt(6,w.sqft);
+            //statement.setInt(1,w.ware_id);
+            statement.setString(1,w.ware_name);
+            statement.setString(2,w.street);
+            statement.setString(3,w.city);
+            statement.setString(4,w.state);
+            statement.setInt(5,w.sqft);
             statement.execute();
             return "Success";
         }
